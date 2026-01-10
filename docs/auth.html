@@ -92,13 +92,61 @@
       .hidden {
         display: none;
       }
+      /* Loading Screen Styles */
+      #loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(86, 86, 86, 0.98);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        z-index: 9999;
+      }
+      #loading-screen.active {
+        display: flex;
+      }
+      .loader {
+        border: 5px solid rgba(178, 255, 169, 0.3);
+        border-top: 5px solid #B2FFA9;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .loading-text {
+        color: #B2FFA9;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-top: 20px;
+      }
+      .loading-subtext {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-top: 10px;
+      }
     </style>
-    <script type="module" crossorigin src="/full-stack-web-gis-irem122/assets/auth-MJEZiSNT.js"></script>
+    <script type="module" crossorigin src="/full-stack-web-gis-irem122/assets/auth-CPK-0sn3.js"></script>
     <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/modulepreload-polyfill-B5Qt9EMX.js">
     <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/preload-helper-BmvMH90o.js">
     <link rel="stylesheet" crossorigin href="/full-stack-web-gis-irem122/assets/style-BJLvbmFw.css">
   </head>
   <body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+      <div class="loader"></div>
+      <div class="loading-text">Please wait...</div>
+      <div class="loading-subtext">Authenticating and preparing your session</div>
+    </div>
+
     <div class="auth-card">
       <h2 id="form-title" data-i18n="login">Login</h2>
 

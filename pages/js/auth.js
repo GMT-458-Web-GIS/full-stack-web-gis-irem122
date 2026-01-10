@@ -66,9 +66,14 @@ if (form) {
         sessionStorage.setItem('justRegistered', 'true')
         sessionStorage.setItem('newUserId', userCred.user.uid)
         
-        // User is already authenticated - no need to wait for onAuthStateChanged
-        // Just give browser a brief moment to sync localStorage, then redirect
-        await new Promise(resolve => setTimeout(resolve, 200))
+        // Show loading screen
+        const loadingScreen = document.getElementById('loading-screen')
+        if (loadingScreen) {
+          loadingScreen.classList.add('active')
+        }
+        
+        // Wait 3 seconds before redirect to allow Firebase to sync
+        await new Promise(resolve => setTimeout(resolve, 3000))
         window.location.href = 'https://gmt-458-web-gis.github.io/full-stack-web-gis-irem122/map.html'
         return // Stop execution
       } else {
@@ -76,9 +81,14 @@ if (form) {
         await updateLastLogin(userCred.user.uid)
         messageEl.textContent = 'Login successful. Redirecting...'
         
-        // User is already authenticated - no need to wait for onAuthStateChanged
-        // Just give browser a brief moment to sync localStorage, then redirect
-        await new Promise(resolve => setTimeout(resolve, 200))
+        // Show loading screen
+        const loadingScreen = document.getElementById('loading-screen')
+        if (loadingScreen) {
+          loadingScreen.classList.add('active')
+        }
+        
+        // Wait 3 seconds before redirect to allow Firebase to sync
+        await new Promise(resolve => setTimeout(resolve, 3000))
         window.location.href = 'https://gmt-458-web-gis.github.io/full-stack-web-gis-irem122/map.html'
         return // Stop execution
       }
@@ -86,6 +96,11 @@ if (form) {
       console.error(err)
       messageEl.textContent = err?.message || 'An error occurred'
       submitBtn.disabled = false
+      // Hide loading screen if error occurs
+      const loadingScreen = document.getElementById('loading-screen')
+      if (loadingScreen) {
+        loadingScreen.classList.remove('active')
+      }
     }
   })
 }
