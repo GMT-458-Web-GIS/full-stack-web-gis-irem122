@@ -60,14 +60,8 @@ export default function App() {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setAuthLoading(false) // Auth state is now ready
       if (!user) {
-        console.log('No user found')
-        // Give Firebase a moment to restore session, then redirect
-        setTimeout(() => {
-          if (!auth.currentUser) {
-            console.log('Redirecting to login...')
-            window.location.href = '/full-stack-web-gis-irem122/login.html'
-          }
-        }, 1500)
+        console.log('No user found - redirecting to login')
+        window.location.href = '/full-stack-web-gis-irem122/login.html'
       } else {
         // User is logged in (email/password)
         console.log('User logged in:', user.email, user.uid)
