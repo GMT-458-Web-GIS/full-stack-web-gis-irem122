@@ -16,13 +16,13 @@ export default defineConfig({
     rollupOptions: {
   input: {
     main: resolve(__dirname, 'index.html'),
-    login: resolve(__dirname, 'login.html'),
-    register: resolve(__dirname, 'register.html'),
-    map: resolve(__dirname, 'map.html'),
-    auth: resolve(__dirname, 'auth.html'),
-    admin: resolve(__dirname, 'admin.html'),
-    adminLogin: resolve(__dirname, 'admin-login.html'),
-    adminDashboard: resolve(__dirname, 'admin-dashboard.html')
+    login: resolve(__dirname, 'pages/login.html'),
+    register: resolve(__dirname, 'pages/register.html'),
+    map: resolve(__dirname, 'pages/map.html'),
+    auth: resolve(__dirname, 'pages/auth.html'),
+    admin: resolve(__dirname, 'pages/admin.html'),
+    adminLogin: resolve(__dirname, 'pages/admin-login.html'),
+    adminDashboard: resolve(__dirname, 'pages/admin-dashboard.html')
   }
 }
 

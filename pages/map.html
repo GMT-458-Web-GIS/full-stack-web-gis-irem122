@@ -15,8 +15,8 @@
     <div id="map"></div>
     <div id="root"></div>
     <!-- Map scripts -->
-    <script type="module" src="/map.js"></script>
-    <script type="module" src="/guest.js"></script>
+    <script type="module" src="./js/map.js"></script>
+    <script type="module" src="./js/guest.js"></script>
     <script type="module">
       // React app'i sadece giriş yapmış kullanıcılar için yükle
       const urlParams = new URLSearchParams(window.location.search);
@@ -24,7 +24,7 @@
       
       if (!isGuest) {
         // Giriş yapmış kullanıcı - React app'i yükle
-        import('./src/main.jsx');
+        import('../src/main.jsx');
       }
     </script>
   </body>
