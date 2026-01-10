@@ -1,0 +1,21 @@
+# Jekyll configuration for GitHub Pages
+# This file tells GitHub Pages how to build the site
+
+# Build settings
+# GitHub Pages uses Jekyll by default, but we're using a custom workflow
+# that builds with Node.js/Vite instead
+
+# Tell Jekyll not to process the site
+# because we're using a custom build process
+skip-jekyll: true
+
+# Exclude these files from processing
+exclude:
+  - node_modules
+  - package.json
+  - package-lock.json
+  - vite.config.js
+  - .github/workflows
+  - functions
+  - src
+  - pages
