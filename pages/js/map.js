@@ -888,6 +888,12 @@ function init() {
     markers = {}
     list.forEach(s => {
       const m = L.marker([s.lat, s.lng]).addTo(map)
+      
+      // Prevent map click when clicking on marker
+      m.on('click', (e) => {
+        L.DomEvent.stopPropagation(e)
+      })
+      
       const popup = document.createElement('div')
       popup.innerHTML = `<strong>${escapeHtml(s.title)}</strong><br/><em>${escapeHtml(s.city||'')}, ${escapeHtml(s.country||'')}</em>
         <div style="font-size:12px;margin-top:6px">${escapeHtml(s.timeSlot||'')} / ${escapeHtml(s.category||'')}</div>`
@@ -897,6 +903,7 @@ function init() {
       flagBtn.addEventListener('click', async (e) => {
         e.stopPropagation()
         e.preventDefault()
+        L.DomEvent.stopPropagation(e)
         if (!auth.currentUser) {
           if (confirm('You must sign in to report. Go to login page?')) {
             window.location.href = './auth.html'
