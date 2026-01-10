@@ -902,13 +902,20 @@ function init() {
       flagBtn.addEventListener('click', async (e) => {
         e.stopPropagation()
         e.preventDefault()
-        reportInProgress = true
+        
+        // Close any open add-event panel immediately
+        const existingPanel = document.getElementById('add-event-panel')
+        if (existingPanel) existingPanel.remove()
+        
+        // Remove preview marker if any
+        if (typeof addPreviewMarker !== 'undefined' && addPreviewMarker) {
+          map.removeLayer(addPreviewMarker)
+        }
         
         if (!auth.currentUser) {
           if (confirm('You must sign in to report. Go to login page?')) {
             window.location.href = './auth.html'
           }
-          reportInProgress = false
           return
         }
         try {
@@ -918,7 +925,6 @@ function init() {
           console.error(err)
           alert('Failed to submit report.')
         }
-        reportInProgress = false
       })
       popup.appendChild(document.createElement('hr'))
       popup.appendChild(flagBtn)
