@@ -1027,6 +1027,15 @@ function init() {
     // map click handling for addMode
     map.on('click', async (e) => {
       if (!addMode || !cachedUser) return
+      
+      // Don't trigger if clicking on a popup or marker
+      if (e.originalEvent && e.originalEvent.target) {
+        const target = e.originalEvent.target
+        if (target.closest('.leaflet-popup') || target.closest('.leaflet-marker-icon')) {
+          return
+        }
+      }
+      
       const { lat, lng } = e.latlng
       
       // show preview marker
