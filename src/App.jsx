@@ -51,46 +51,44 @@ export default function App() {
   const [mapZoom, setMapZoom] = useState(6)
   const [editingMarker, setEditingMarker] = useState(null) // For editing markers
   const [authLoading, setAuthLoading] = useState(true) // Auth loading state
-  const [authChecked, setAuthChecked] = useState(false) // Has auth been checked at least once?
 
   // Ensure user is logged in (email/password user)
   useEffect(() => {
     const auth = getAuth()
     
-    console.log('Setting up auth listener...')
+    // Wait for auth state to be ready - only redirect after 3 seconds if no user
+    let redirectTimeout = null
     
-    // Wait for auth state to be ready
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      console.log('Auth state changed:', user ? user.email : 'no user')
+      // Clear any pending redirect
+      if (redirectTimeout) {
+        clearTimeout(redirectTimeout)
+        redirectTimeout = null
+      }
       
-      setAuthLoading(false) // Auth state is now ready
-      setAuthChecked(true) // Mark that we've checked auth
+      setAuthLoading(false)
       
-      if (!user) {
-        // Only redirect if we've actually checked and there's no user
-        // Give Firebase a moment to restore the session
-        if (!authChecked) {
-          console.log('First check - no user, waiting...')
-          // Wait a bit more for Firebase to restore session
-          setTimeout(() => {
-            const currentUser = auth.currentUser
-            if (!currentUser) {
-              console.log('No user after wait, redirecting to login...')
-              window.location.href = '/full-stack-web-gis-irem122/login.html'
-            }
-          }, 1500)
-        } else {
-          console.log('No user found, redirecting to login...')
-          window.location.href = '/full-stack-web-gis-irem122/login.html'
-        }
+      if (user) {
+        // User is logged in
+        console.log('User logged in:', user.email)
+        setCurrentUserId(user.uid)
       } else {
-        // User is logged in (email/password)
-        console.log('User logged in:', user.email, user.uid)
-        setCurrentUserId(user.uid) // Store user ID
+        // No user - wait 3 seconds before redirecting (give Firebase time to restore session)
+        console.log('No user detected, will redirect in 3 seconds...')
+        redirectTimeout = setTimeout(() => {
+          // Double check there's still no user
+          if (!auth.currentUser) {
+            console.log('Still no user, redirecting to login')
+            window.location.href = '/full-stack-web-gis-irem122/login.html'
+          }
+        }, 3000)
       }
     })
     
-    return () => unsubscribe()
+    return () => {
+      unsubscribe()
+      if (redirectTimeout) clearTimeout(redirectTimeout)
+    }
   }, [])
 
   const [loadingCountries, setLoadingCountries] = useState(true)
