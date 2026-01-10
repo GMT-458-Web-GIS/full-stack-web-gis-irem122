@@ -885,6 +885,27 @@ function init() {
   // Flag to prevent map click during report
   let reportInProgress = false
   
+  // Global function to handle report
+  window.handleReport = async function(suggestionId) {
+    // Close any open add-event panel
+    const existingPanel = document.getElementById('add-event-panel')
+    if (existingPanel) existingPanel.remove()
+    
+    if (!auth.currentUser) {
+      if (confirm('You must sign in to report. Go to login page?')) {
+        window.location.href = './auth.html'
+      }
+      return
+    }
+    try {
+      await flagSuggestion(suggestionId, 'Inappropriate content')
+      alert('Report submitted.')
+    } catch (err) {
+      console.error(err)
+      alert('Failed to submit report.')
+    }
+  }
+  
   function renderSuggestions(list) {
     // clear existing markers
     Object.values(markers).forEach(m => map.removeLayer(m))
@@ -893,51 +914,17 @@ function init() {
       // Create marker with bubblingMouseEvents: false to prevent click from bubbling to map
       const m = L.marker([s.lat, s.lng], { bubblingMouseEvents: false }).addTo(map)
       
-      const popup = document.createElement('div')
-      popup.innerHTML = `<strong>${escapeHtml(s.title)}</strong><br/><em>${escapeHtml(s.city||'')}, ${escapeHtml(s.country||'')}</em>
-        <div style="font-size:12px;margin-top:6px">${escapeHtml(s.timeSlot||'')} / ${escapeHtml(s.category||'')}</div>`
-      const flagBtn = document.createElement('button')
-      flagBtn.textContent = 'Report'
-      flagBtn.style.marginTop = '8px'
-      flagBtn.style.cursor = 'pointer'
-      
-      // Use mousedown instead of click - it fires before map click
-      flagBtn.addEventListener('mousedown', async (e) => {
-        e.stopPropagation()
-        e.stopImmediatePropagation()
-        e.preventDefault()
-        
-        // Set global flag to block map click
-        window._reportClicked = true
-        
-        // Close popup first
-        m.closePopup()
-        
-        setTimeout(async () => {
-          // Close any open add-event panel
-          const existingPanel = document.getElementById('add-event-panel')
-          if (existingPanel) existingPanel.remove()
-          
-          if (!auth.currentUser) {
-            if (confirm('You must sign in to report. Go to login page?')) {
-              window.location.href = './auth.html'
-            }
-            window._reportClicked = false
-            return
-          }
-          try {
-            await flagSuggestion(s.id, 'Inappropriate content')
-            alert('Report submitted.')
-          } catch (err) {
-            console.error(err)
-            alert('Failed to submit report.')
-          }
-          window._reportClicked = false
-        }, 100)
-      })
-      popup.appendChild(document.createElement('hr'))
-      popup.appendChild(flagBtn)
-      m.bindPopup(popup)
+      // Create simple HTML popup with onclick attribute
+      const popupContent = `
+        <div>
+          <strong>${escapeHtml(s.title)}</strong><br/>
+          <em>${escapeHtml(s.city||'')}, ${escapeHtml(s.country||'')}</em>
+          <div style="font-size:12px;margin-top:6px">${escapeHtml(s.timeSlot||'')} / ${escapeHtml(s.category||'')}</div>
+          <hr style="margin:8px 0"/>
+          <button onclick="event.stopPropagation(); window.handleReport('${s.id}')" style="margin-top:4px;cursor:pointer;">Report</button>
+        </div>
+      `
+      m.bindPopup(popupContent)
       markers[s.id] = m
     })
   }
