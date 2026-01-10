@@ -59,22 +59,39 @@ export default function App() {
     const auth = getAuth()
     let redirectTimeout
     
+    // Check if we just registered (sessionStorage flag from auth.js)
+    const justRegistered = sessionStorage.getItem('justRegistered')
+    const newUserId = sessionStorage.getItem('newUserId')
+    
     // Wait for auth state to be ready
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setAuthLoading(false) // Auth state is now ready
+      
+      // If we just registered, use the sessionStorage UID as fallback
+      if (justRegistered && newUserId && !user) {
+        console.log('Just registered - using sessionStorage user ID:', newUserId)
+        setCurrentUserId(newUserId)
+        sessionStorage.removeItem('justRegistered')
+        sessionStorage.removeItem('newUserId')
+        return
+      }
+      
       if (!user) {
-        console.log('No user found - redirecting to login after 500ms')
-        // Give a moment for potential late-arriving user from localStorage
+        console.log('No user found - redirecting to login after 800ms')
+        // Give extra time for potential late-arriving user from localStorage
         redirectTimeout = setTimeout(() => {
           if (!auth.currentUser) {
             console.log('Still no user - redirecting to login')
             window.location.href = '/full-stack-web-gis-irem122/login.html'
           }
-        }, 500)
+        }, 800)
       } else {
         // User is logged in (email/password)
         console.log('User logged in:', user.email, user.uid)
         setCurrentUserId(user.uid) // Store user ID
+        // Clear any registration flags
+        sessionStorage.removeItem('justRegistered')
+        sessionStorage.removeItem('newUserId')
       }
     })
     

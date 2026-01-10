@@ -62,6 +62,10 @@ if (form) {
         await createUserProfile(userCred.user, 'contributor')
         messageEl.textContent = 'Registration successful. Redirecting...'
         
+        // Mark that we just registered - sessionStorage survives redirect
+        sessionStorage.setItem('justRegistered', 'true')
+        sessionStorage.setItem('newUserId', userCred.user.uid)
+        
         // User is already authenticated - no need to wait for onAuthStateChanged
         // Just give browser a brief moment to sync localStorage, then redirect
         await new Promise(resolve => setTimeout(resolve, 200))
