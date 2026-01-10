@@ -54,50 +54,109 @@ export default function App() {
   const [editingMarker, setEditingMarker] = useState(null) // For editing markers
   const [authLoading, setAuthLoading] = useState(true) // Auth loading state
 
+  /* ============================================================
+     DEBUG MODE - Map Page Auth Guard Logging
+     ============================================================ */
+  const DEBUG = true
+  const log = (step, data) => {
+    if (!DEBUG) return
+    const timestamp = new Date().toISOString().substr(11, 12)
+    console.log(`%c[MAP-AUTH ${timestamp}] ${step}`, 'color: #9C27B0; font-weight: bold', data || '')
+  }
+  const warn = (step, data) => {
+    if (!DEBUG) return
+    console.warn(`%c[MAP-AUTH] ⚠️ ${step}`, 'color: #FF9800; font-weight: bold', data || '')
+  }
+
   // Ensure user is logged in (email/password user)
   useEffect(() => {
+    log('GUARD', '========== MAP AUTH GUARD STARTED ==========')
+    log('GUARD', `Current URL: ${window.location.href}`)
+    log('GUARD', `Referrer: ${document.referrer}`)
+    
     const auth = getAuth()
     let redirectTimeout
     
-    // Check if we just registered (sessionStorage flag from auth.js)
+    log('GUARD', `auth object exists: ${!!auth}`)
+    log('GUARD', `auth.currentUser on mount: ${auth.currentUser?.email || 'null'}`)
+    
+    // Check sessionStorage
     const justRegistered = sessionStorage.getItem('justRegistered')
     const newUserId = sessionStorage.getItem('newUserId')
+    log('STORAGE', `sessionStorage - justRegistered: ${justRegistered}`)
+    log('STORAGE', `sessionStorage - newUserId: ${newUserId}`)
+    
+    // Check localStorage for Firebase auth
+    try {
+      const localStorageKeys = Object.keys(localStorage).filter(k => k.includes('firebase'))
+      log('STORAGE', `Firebase localStorage keys: ${localStorageKeys.length}`, localStorageKeys)
+    } catch (e) {
+      warn('STORAGE', 'Cannot access localStorage')
+    }
+    
+    log('GUARD', 'Setting up onAuthStateChanged listener...')
     
     // Wait for auth state to be ready
     const unsubscribe = auth.onAuthStateChanged((user) => {
+      log('AUTH_STATE', '========== AUTH STATE CHANGED (MAP) ==========')
+      log('AUTH_STATE', `User from callback: ${user?.email || 'null'}`)
+      log('AUTH_STATE', `User UID: ${user?.uid || 'null'}`)
+      log('AUTH_STATE', `auth.currentUser: ${auth.currentUser?.email || 'null'}`)
+      
       setAuthLoading(false) // Auth state is now ready
+      log('GUARD', 'authLoading set to false')
       
       // If we just registered, use the sessionStorage UID as fallback
       if (justRegistered && newUserId && !user) {
-        console.log('Just registered - using sessionStorage user ID:', newUserId)
+        log('FALLBACK', '🔄 Using sessionStorage fallback for newly registered user')
+        log('FALLBACK', `Setting currentUserId to: ${newUserId}`)
         setCurrentUserId(newUserId)
         sessionStorage.removeItem('justRegistered')
         sessionStorage.removeItem('newUserId')
+        log('FALLBACK', 'sessionStorage flags cleared')
         return
       }
       
       if (!user) {
-        console.log('No user found - redirecting to login after 800ms')
+        warn('GUARD', 'No user found!')
+        log('GUARD', 'Will redirect to login after 800ms timeout...')
+        
         // Give extra time for potential late-arriving user from localStorage
         redirectTimeout = setTimeout(() => {
+          log('GUARD', 'Timeout fired - checking auth.currentUser again...')
+          log('GUARD', `auth.currentUser: ${auth.currentUser?.email || 'null'}`)
+          
           if (!auth.currentUser) {
-            console.log('Still no user - redirecting to login')
+            warn('GUARD', '❌ Still no user after timeout - REDIRECTING TO LOGIN')
+            log('GUARD', `Redirect target: /full-stack-web-gis-irem122/login.html`)
             window.location.href = '/full-stack-web-gis-irem122/login.html'
+          } else {
+            log('GUARD', '✅ User appeared after timeout - staying on map')
+            setCurrentUserId(auth.currentUser.uid)
           }
         }, 800)
       } else {
         // User is logged in (email/password)
-        console.log('User logged in:', user.email, user.uid)
+        log('GUARD', '✅ User is logged in!')
+        log('GUARD', `User email: ${user.email}`)
+        log('GUARD', `User UID: ${user.uid}`)
         setCurrentUserId(user.uid) // Store user ID
+        log('GUARD', 'currentUserId set')
+        
         // Clear any registration flags
         sessionStorage.removeItem('justRegistered')
         sessionStorage.removeItem('newUserId')
+        log('GUARD', 'Cleared sessionStorage flags')
       }
     })
     
     return () => {
+      log('GUARD', 'Cleanup - unsubscribing auth listener')
       unsubscribe()
-      if (redirectTimeout) clearTimeout(redirectTimeout)
+      if (redirectTimeout) {
+        log('GUARD', 'Cleanup - clearing redirect timeout')
+        clearTimeout(redirectTimeout)
+      }
     }
   }, [])
 

@@ -8,13 +8,30 @@ import {
 } from 'firebase/auth'
 import { getDatabase, ref, onValue, push, set, remove, update } from 'firebase/database'
 
+/* ============================================================
+   DEBUG MODE - Firebase.js (React) Logging
+   ============================================================ */
+const DEBUG = true
+const log = (step, data) => {
+  if (!DEBUG) return
+  const timestamp = new Date().toISOString().substr(11, 12)
+  console.log(`%c[SRC-FIREBASE ${timestamp}] ${step}`, 'color: #E91E63; font-weight: bold', data || '')
+}
+
 let app, auth, db
 
 export function initFirebase() {
+  log('INIT', '====== SRC/FIREBASE.JS initFirebase() CALLED ======')
+  
   // Check if Firebase is already initialized (e.g., by firebase-client.js)
-  if (getApps().length > 0) {
-    app = getApps()[0]
+  const existingApps = getApps()
+  log('INIT', `Existing Firebase apps: ${existingApps.length}`)
+  
+  if (existingApps.length > 0) {
+    app = existingApps[0]
+    log('INIT', `Using existing app: ${app.name}`)
   } else {
+    log('INIT', 'Creating new Firebase app...')
     const firebaseConfig = {
       apiKey: "AIzaSyANVHlJiXqVubgu-DZU-v9rVWvKtF-BdXU",
       authDomain: "webgis-5c57a.firebaseapp.com",
@@ -26,16 +43,27 @@ export function initFirebase() {
       measurementId: "G-PHTSHD420R"
     }
     app = initializeApp(firebaseConfig)
+    log('INIT', `New Firebase app created: ${app.name}`)
   }
+  
   auth = getAuth(app)
+  log('INIT', `Auth instance obtained`)
+  log('INIT', `auth.currentUser on init: ${auth.currentUser?.email || 'null'}`)
   
   // Explicitly set persistence to LOCAL - synchronously
   // This ensures that user state is restored from localStorage on every page load
-  setPersistence(auth, browserLocalPersistence).catch(err => {
-    console.warn('Failed to set persistence:', err)
-  })
+  log('PERSISTENCE', 'Setting persistence to browserLocalPersistence...')
+  setPersistence(auth, browserLocalPersistence)
+    .then(() => {
+      log('PERSISTENCE', '✅ Persistence set successfully')
+    })
+    .catch(err => {
+      console.warn('%c[SRC-FIREBASE] ⚠️ Failed to set persistence:', 'color: #FF9800', err)
+    })
   
   db = getDatabase(app)
+  log('INIT', 'Database instance obtained')
+  log('INIT', '====== initFirebase() COMPLETE ======')
 }
 
 export function signInAnonymously() {

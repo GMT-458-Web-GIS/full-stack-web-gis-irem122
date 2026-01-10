@@ -9,15 +9,41 @@ import {
   getDatabase, ref, set, onValue, update, push, get, child
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js'
 
+/* ============================================================
+   DEBUG MODE - Firebase Client Logging
+   ============================================================ */
+const DEBUG = true
+const log = (step, data) => {
+  if (!DEBUG) return
+  const timestamp = new Date().toISOString().substr(11, 12)
+  console.log(`%c[FIREBASE-CLIENT ${timestamp}] ${step}`, 'color: #2196F3; font-weight: bold', data || '')
+}
+
+log('INIT', '====== FIREBASE-CLIENT.JS LOADED ======')
+
 // Initialize app only once - use global singleton if available
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig)
+const existingApps = getApps()
+log('INIT', `Existing Firebase apps: ${existingApps.length}`)
+
+const app = existingApps.length ? existingApps[0] : initializeApp(firebaseConfig)
+log('INIT', `Firebase app initialized: ${app.name}`)
+
 const auth = getAuth(app)
+log('INIT', `Auth instance created`)
+log('INIT', `auth.currentUser on init: ${auth.currentUser?.email || 'null'}`)
+
 const db = getDatabase(app)
+log('INIT', `Database instance created`)
 
 // Explicitly set persistence to LOCAL (most reliable for this project)
-setPersistence(auth, browserLocalPersistence).catch(err => {
-  console.warn('Failed to set persistence:', err)
-})
+log('PERSISTENCE', 'Setting persistence to browserLocalPersistence...')
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    log('PERSISTENCE', '✅ Persistence set successfully to LOCAL')
+  })
+  .catch(err => {
+    console.warn('%c[FIREBASE-CLIENT] ⚠️ Failed to set persistence:', 'color: #FF9800', err)
+  })
 
 export { auth, db }
 
