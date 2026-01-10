@@ -1,0 +1,12 @@
+import{f as h}from"./firebase-config-DxLbwtvt.js";/* empty css              */import{getApps as g,initializeApp as A}from"https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";import{getAuth as $,onAuthStateChanged as S}from"https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";import{getDatabase as v,ref as l,onValue as w,get as E,update as m}from"https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";const y=g().length?g()[0]:A(h),k=$(y),d=v(y),u=document.getElementById("admin-msg"),f=document.getElementById("suggestions-body");function a(t,e=!1){u&&(u.textContent=t||"",u.style.color=e?"#d00":"#080")}async function z(t){if(!t)return!1;try{const e=l(d,`users/${t}`),s=await E(e);return s.exists()?s.val().role==="admin":!1}catch(e){return console.error(e),!1}}function D(t){const e=document.createElement("tr");return e.dataset.id=t.id,e.innerHTML=`
+    <td>${o(t.title||"")}</td>
+    <td>${o(t.createdBy||"")}</td>
+    <td>${o(t.city||"")} / ${o(t.country||"")}</td>
+    <td>${o(t.timeSlot||"")} / ${o(t.category||"")}</td>
+    <td>${t.flags&&t.flags.length?t.flags.length:0}</td>
+    <td class="status">${o(t.visibility||"public")}</td>
+    <td class="actions">
+      <button class="toggle-btn">${t.visibility==="hidden"?"Geri Al":"Gizle"}</button>
+      <button class="delete-btn">Sil</button>
+    </td>
+  `,e.querySelector(".toggle-btn").addEventListener("click",async()=>{const s=e.dataset.id,i=l(d,`suggestions/${s}`);try{const n=t.visibility==="hidden"?"public":"hidden",c=new Date().toISOString();await m(i,{visibility:n,updatedAt:c}),a("Güncellendi")}catch(n){console.error(n),a("Güncelleme hata",!0)}}),e.querySelector(".delete-btn").addEventListener("click",async()=>{if(!confirm("Bu öneriyi tamamen gizlemek istiyor musunuz?"))return;const s=e.dataset.id,i=l(d,`suggestions/${s}`);try{const n=new Date().toISOString();await m(i,{visibility:"hidden",updatedAt:n}),a("Öneri gizlendi.")}catch(n){console.error(n),a("Silme hata",!0)}}),e}function o(t){return t?t.replace(/[&<>"'`]/g,e=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","`":"&#96;"})[e]):""}let r=null;S(k,async t=>{if(!t){a("Admin girişi gerekli. Lütfen giriş yapın.",!0),r&&(r(),r=null);return}if(!await z(t.uid)){a("Erişim reddedildi: admin değilsiniz.",!0),r&&(r(),r=null);return}a("Admin olarak giriş yapıldı.");const s=l(d,"suggestions");r&&r(),r=w(s,i=>{if(f.innerHTML="",!i.exists())return;const n=i.val();Object.entries(n).forEach(([c,p])=>{const b={id:c,...p};f.appendChild(D(b))})},i=>{console.error(i),a("Dinleme hatası",!0)})});

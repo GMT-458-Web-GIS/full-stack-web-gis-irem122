@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Taste & Go - Login / Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lora:ital,wght@0,400..700;1,400..700&family=Space+Grotesk:wght@300..700&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: "Google Sans", system-ui, sans-serif;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background: #565656;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .auth-card {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        border-radius: 20px;
+        padding: 40px;
+        width: 400px;
+        max-width: 90vw;
+      }
+      .auth-card h2 {
+        color: #B2FFA9;
+        font-weight: 600;
+        font-size: 2rem;
+        margin-bottom: 30px;
+        text-align: center;
+      }
+      .auth-card input {
+        width: 100%;
+        padding: 15px;
+        margin: 10px 0;
+        box-sizing: border-box;
+        border: none;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.95);
+        font-family: "Google Sans", sans-serif;
+        font-size: 16px;
+        color: #565656;
+      }
+      .actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+      }
+      .actions button {
+        flex: 1;
+        padding: 15px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-family: "Google Sans", sans-serif;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s ease;
+      }
+      #submit-btn {
+        background: #FF4A1C;
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 74, 28, 0.3);
+      }
+      #submit-btn:hover {
+        background: #ff6a45;
+        box-shadow: 0 6px 20px rgba(255, 74, 28, 0.4);
+      }
+      #toggle-btn {
+        background: #B2FFA9;
+        color: #565656;
+        box-shadow: 0 4px 15px rgba(178, 255, 169, 0.3);
+      }
+      #toggle-btn:hover {
+        background: #c5ffbe;
+        box-shadow: 0 6px 20px rgba(178, 255, 169, 0.4);
+      }
+      button:hover {
+        transform: translateY(-2px);
+      }
+      .msg {
+        margin-top: 20px;
+        text-align: center;
+        color: rgba(255,255,255,0.9);
+        font-weight: 500;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+    <script type="module" crossorigin src="/full-stack-web-gis-irem122/assets/auth-CDHU481j.js"></script>
+    <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/firebase-config-DxLbwtvt.js">
+    <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/firebase-client-Bklma2ql.js">
+    <link rel="stylesheet" crossorigin href="/full-stack-web-gis-irem122/assets/style-BJLvbmFw.css">
+  </head>
+  <body>
+    <div class="auth-card">
+      <h2 id="form-title">Login</h2>
+
+        <form id="auth-form">
+          <input type="email" id="email" placeholder="Email" required />
+          <input type="password" id="password" placeholder="Password" minlength="6" required />
+          <div class="actions">
+            <button id="submit-btn" type="submit">Sign In</button>
+            <button id="toggle-btn" type="button">Sign Up</button>
+          </div>
+        </form>
+
+        <div id="message" class="msg"></div>
+        <button id="signout-btn" class="hidden" style="width:100%;padding:15px;background:#565656;color:white;border:none;border-radius:12px;font-family:'Google Sans',sans-serif;font-weight:600;margin-top:15px;">Sign Out</button>
+        
+        <div style="text-align:center;margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.2);">
+          <a href="/admin-login.html" style="color:#B2FFA9;text-decoration:none;font-size:14px;opacity:0.8;font-family:'Google Sans',sans-serif;">Admin Login</a>
+        </div>
+      </div>
+
+  </body>
+</html>
