@@ -885,6 +885,9 @@ function init() {
   // Flag to prevent map click during report
   let reportInProgress = false
   
+  // Flag to track if marker was clicked
+  let markerClicked = false
+  
   // Global function to handle report
   window.handleReport = async function(suggestionId) {
     // Close any open add-event panel
@@ -913,6 +916,13 @@ function init() {
     list.forEach(s => {
       // Create marker with bubblingMouseEvents: false to prevent click from bubbling to map
       const m = L.marker([s.lat, s.lng], { bubblingMouseEvents: false }).addTo(map)
+      
+      // When marker is clicked, set flag to prevent map click handler
+      m.on('click', () => {
+        markerClicked = true
+        // Reset after a short delay
+        setTimeout(() => { markerClicked = false }, 500)
+      })
       
       // Create simple HTML popup with onclick attribute
       const popupContent = `
@@ -1048,6 +1058,9 @@ function init() {
       
       // Don't trigger if report is in progress
       if (reportInProgress) return
+      
+      // Don't trigger if marker was clicked
+      if (markerClicked) return
       
       // Don't trigger if a popup is open
       if (popupOpen) return
