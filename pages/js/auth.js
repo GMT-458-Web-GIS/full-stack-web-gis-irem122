@@ -62,22 +62,9 @@ if (form) {
         await createUserProfile(userCred.user, 'contributor')
         messageEl.textContent = 'Registration successful. Redirecting...'
         
-        // Wait for onAuthStateChanged to confirm user is set
-        const authPromise = new Promise((resolve) => {
-          const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-              unsubscribe()
-              resolve()
-            }
-          })
-          // Fallback timeout - don't wait more than 3 seconds
-          setTimeout(() => {
-            unsubscribe()
-            resolve()
-          }, 3000)
-        })
-        
-        await authPromise
+        // User is already authenticated - no need to wait for onAuthStateChanged
+        // Just give browser a brief moment to sync localStorage, then redirect
+        await new Promise(resolve => setTimeout(resolve, 200))
         window.location.href = 'https://gmt-458-web-gis.github.io/full-stack-web-gis-irem122/map.html'
         return // Stop execution
       } else {
@@ -85,22 +72,9 @@ if (form) {
         await updateLastLogin(userCred.user.uid)
         messageEl.textContent = 'Login successful. Redirecting...'
         
-        // Wait for onAuthStateChanged to confirm user is set
-        const authPromise = new Promise((resolve) => {
-          const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-              unsubscribe()
-              resolve()
-            }
-          })
-          // Fallback timeout - don't wait more than 3 seconds
-          setTimeout(() => {
-            unsubscribe()
-            resolve()
-          }, 3000)
-        })
-        
-        await authPromise
+        // User is already authenticated - no need to wait for onAuthStateChanged
+        // Just give browser a brief moment to sync localStorage, then redirect
+        await new Promise(resolve => setTimeout(resolve, 200))
         window.location.href = 'https://gmt-458-web-gis.github.io/full-stack-web-gis-irem122/map.html'
         return // Stop execution
       }

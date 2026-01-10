@@ -1,5 +1,11 @@
 import { initializeApp, getApps } from 'firebase/app'
-import { getAuth, signInAnonymously as _signInAnon, signOut as _signOut } from 'firebase/auth'
+import { 
+  getAuth, 
+  signInAnonymously as _signInAnon, 
+  signOut as _signOut,
+  setPersistence,
+  browserLocalPersistence
+} from 'firebase/auth'
 import { getDatabase, ref, onValue, push, set, remove, update } from 'firebase/database'
 
 let app, auth, db
@@ -22,6 +28,13 @@ export function initFirebase() {
     app = initializeApp(firebaseConfig)
   }
   auth = getAuth(app)
+  
+  // Explicitly set persistence to LOCAL - synchronously
+  // This ensures that user state is restored from localStorage on every page load
+  setPersistence(auth, browserLocalPersistence).catch(err => {
+    console.warn('Failed to set persistence:', err)
+  })
+  
   db = getDatabase(app)
 }
 

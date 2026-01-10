@@ -57,13 +57,20 @@ export default function App() {
   // Ensure user is logged in (email/password user)
   useEffect(() => {
     const auth = getAuth()
+    let redirectTimeout
     
     // Wait for auth state to be ready
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setAuthLoading(false) // Auth state is now ready
       if (!user) {
-        console.log('No user found - redirecting to login')
-        window.location.href = '/full-stack-web-gis-irem122/login.html'
+        console.log('No user found - redirecting to login after 500ms')
+        // Give a moment for potential late-arriving user from localStorage
+        redirectTimeout = setTimeout(() => {
+          if (!auth.currentUser) {
+            console.log('Still no user - redirecting to login')
+            window.location.href = '/full-stack-web-gis-irem122/login.html'
+          }
+        }, 500)
       } else {
         // User is logged in (email/password)
         console.log('User logged in:', user.email, user.uid)
@@ -71,7 +78,10 @@ export default function App() {
       }
     })
     
-    return () => unsubscribe()
+    return () => {
+      unsubscribe()
+      if (redirectTimeout) clearTimeout(redirectTimeout)
+    }
   }, [])
 
   const [loadingCountries, setLoadingCountries] = useState(true)
