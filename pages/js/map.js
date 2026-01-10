@@ -929,30 +929,11 @@ function init() {
       `
       m.bindPopup(popupContent)
       
-      // Get the marker's DOM element and add mousedown handler
-      m.on('add', () => {
-        const icon = m.getElement()
-        if (icon) {
-          // Remove all existing event listeners
-          icon.style.pointerEvents = 'auto'
-          
-          // Add mousedown handler (fires before click)
-          icon.addEventListener('mousedown', (e) => {
-            e.stopPropagation()
-            e.preventDefault()
-            markerClicked = true
-            popupOpen = true // Manually set popup flag IMMEDIATELY
-            m.openPopup()
-            // Keep popupOpen true for 3 seconds to handle Leaflet internals
-            setTimeout(() => { 
-              markerClicked = false
-            }, 3000)
-          }, true) // Use capture phase
-        }
+      // Custom click handler for marker
+      m.on('click', (e) => {
+        L.DomEvent.stopPropagation(e)
+        m.openPopup()
       })
-      
-      // Completely disable the default click behavior
-      m.off('click')
       
       markers[s.id] = m
     })
@@ -1066,10 +1047,23 @@ function init() {
 
     // map click handling for addMode
     let popupOpen = false
-    map.on('popupopen', () => { popupOpen = true })
-    map.on('popupclose', () => { popupOpen = false })
+    let mapClickHandlerActive = true
+    
+    map.on('popupopen', () => { 
+      popupOpen = true
+      // DISABLE map click handler when popup opens
+      mapClickHandlerActive = false
+    })
+    map.on('popupclose', () => { 
+      popupOpen = false
+      // RE-ENABLE map click handler when popup closes
+      mapClickHandlerActive = true
+    })
     
     map.on('click', async (e) => {
+      // FIRST CHECK: if map click handler is disabled, exit immediately
+      if (!mapClickHandlerActive) return
+      
       if (!addMode || !cachedUser) return
       
       // Don't trigger if report button was clicked
