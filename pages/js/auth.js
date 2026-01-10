@@ -61,21 +61,20 @@ if (form) {
         const userCred = await createUserWithEmailAndPassword(auth, email, password)
         await createUserProfile(userCred.user, 'contributor')
         messageEl.textContent = 'Registration successful. Redirecting...'
-        setTimeout(() => {
-          window.location.replace('/full-stack-web-gis-irem122/map.html')
-        }, 1000)
+        // Direct redirect without setTimeout for Safari compatibility
+        window.location.href = 'https://gmt-458-web-gis.github.io/full-stack-web-gis-irem122/map.html'
+        return // Stop execution
       } else {
         const userCred = await signInWithEmailAndPassword(auth, email, password)
         await updateLastLogin(userCred.user.uid)
         messageEl.textContent = 'Login successful. Redirecting...'
-        setTimeout(() => {
-          window.location.replace('/full-stack-web-gis-irem122/map.html')
-        }, 1000)
+        // Direct redirect without setTimeout for Safari compatibility
+        window.location.href = 'https://gmt-458-web-gis.github.io/full-stack-web-gis-irem122/map.html'
+        return // Stop execution
       }
     } catch (err) {
       console.error(err)
       messageEl.textContent = err?.message || 'An error occurred'
-    } finally {
       submitBtn.disabled = false
     }
   })
