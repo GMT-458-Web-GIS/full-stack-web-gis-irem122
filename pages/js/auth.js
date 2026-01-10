@@ -62,14 +62,14 @@ if (form) {
         await createUserProfile(userCred.user, 'contributor')
         messageEl.textContent = 'Registration successful. Redirecting...'
         setTimeout(() => {
-          window.location.href = 'map.html'
+          window.location.href = '../map.html'
         }, 1500)
       } else {
         const userCred = await signInWithEmailAndPassword(auth, email, password)
         await updateLastLogin(userCred.user.uid)
         messageEl.textContent = 'Login successful. Redirecting...'
         setTimeout(() => {
-          window.location.href = 'map.html'
+          window.location.href = '../map.html'
         }, 1500)
       }
     } catch (err) {

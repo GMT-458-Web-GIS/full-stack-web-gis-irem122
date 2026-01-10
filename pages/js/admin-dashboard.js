@@ -19,7 +19,7 @@ function checkAdminSession() {
   if (adminSession !== 'true' || !loginTime || (now - parseInt(loginTime)) > sessionDuration) {
     localStorage.removeItem('adminSession');
     localStorage.removeItem('adminLoginTime');
-    window.location.href = '/admin-login.html';
+    window.location.href = './admin-login.html';
     return false;
   }
   return true;
@@ -535,7 +535,7 @@ window.logout = function() {
   if (confirmLogout) {
     localStorage.removeItem('adminSession');
     localStorage.removeItem('adminLoginTime');
-    window.location.href = '/admin-login.html';
+    window.location.href = './admin-login.html';
   }
 }
 
@@ -562,7 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (adminSession !== 'true' || !loginTime || (now - parseInt(loginTime)) > sessionDuration) {
     localStorage.removeItem('adminSession');
     localStorage.removeItem('adminLoginTime');
-    window.location.href = '/admin-login.html';
+    window.location.href = './admin-login.html';
     return;
   }
 

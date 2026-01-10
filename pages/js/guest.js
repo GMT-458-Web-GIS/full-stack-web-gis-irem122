@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Misafir olduğunu işaretle
       localStorage.setItem('guest', 'true');
       // Misafir olarak harita sayfasına git
-      window.location.href = 'map.html?guest=true';
+      window.location.href = '../map.html?guest=true';
     });
   }
 });
