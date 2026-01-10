@@ -7,11 +7,14 @@ let app, auth, db
 export function initFirebase() {
   if (app) return
   const firebaseConfig = {
-    apiKey: "REPLACE",
-    authDomain: "REPLACE",
-    projectId: "REPLACE",
-    databaseURL: "REPLACE"
-    // ...diğer config
+    apiKey: "AIzaSyANVHlJiXqVubgu-DZU-v9rVWvKtF-BdXU",
+    authDomain: "webgis-5c57a.firebaseapp.com",
+    projectId: "webgis-5c57a",
+    databaseURL: "https://webgis-5c57a-default-rtdb.firebaseio.com",
+    storageBucket: "webgis-5c57a.firebasestorage.app",
+    messagingSenderId: "756947379094",
+    appId: "1:756947379094:web:7e4a812bdfa5e84da8b3b7",
+    measurementId: "G-PHTSHD420R"
   }
   app = initializeApp(firebaseConfig)
   auth = getAuth(app)
