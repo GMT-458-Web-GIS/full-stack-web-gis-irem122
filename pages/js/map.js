@@ -1032,8 +1032,15 @@ function init() {
     })
 
     // map click handling for addMode
+    let popupOpen = false
+    map.on('popupopen', () => { popupOpen = true })
+    map.on('popupclose', () => { popupOpen = false })
+    
     map.on('click', async (e) => {
       if (!addMode || !cachedUser) return
+      
+      // Don't trigger if a popup is open
+      if (popupOpen) return
       
       // Don't trigger if clicking on a popup or marker
       if (e.originalEvent && e.originalEvent.target) {
