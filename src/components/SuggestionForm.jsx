@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { createSuggestion, updateSuggestion } from '../firebase'
 import { getAuth, signInAnonymously } from 'firebase/auth'
+import { useTranslation } from '../translations'
 
 export default function SuggestionForm({ onClose, initialData, editingMarker }) {
+  const { t } = useTranslation()
   const [form, setForm] = useState({ 
     title: '', 
     description: '', 
@@ -112,7 +114,7 @@ export default function SuggestionForm({ onClose, initialData, editingMarker }) 
         fontFamily:"'Google Sans', sans-serif"
       }}>
         <h3 style={{margin:'0 0 20px 0', color:'#FF4A1C', fontSize:'24px', fontWeight:600}}>
-          {editingMarker ? 'Edit Marker' : 'Add New Marker'}
+          {editingMarker ? t('editSuggestion') : t('addSuggestion')}
         </h3>
         
         {/* Location Info (Read-only) */}
@@ -135,7 +137,7 @@ export default function SuggestionForm({ onClose, initialData, editingMarker }) 
 
         <div style={{display:'flex', flexDirection:'column', gap:'14px'}}>
           <label style={{display:'flex', flexDirection:'column', gap:'6px'}}>
-            <span style={{fontSize:'13px', fontWeight:600, color:'#565656'}}>Title *</span>
+            <span style={{fontSize:'13px', fontWeight:600, color:'#565656'}}>{t('title')} *</span>
             <input 
               placeholder="e.g., Best Kebab Restaurant" 
               value={form.title} 
@@ -152,7 +154,7 @@ export default function SuggestionForm({ onClose, initialData, editingMarker }) 
           </label>
           
           <label style={{display:'flex', flexDirection:'column', gap:'6px'}}>
-            <span style={{fontSize:'13px', fontWeight:600, color:'#565656'}}>Description *</span>
+            <span style={{fontSize:'13px', fontWeight:600, color:'#565656'}}>{t('description')} *</span>
             <textarea 
               placeholder="Tell us about this place..." 
               value={form.description} 
@@ -171,7 +173,7 @@ export default function SuggestionForm({ onClose, initialData, editingMarker }) 
           </label>
           
           <label style={{display:'flex', flexDirection:'column', gap:'6px'}}>
-            <span style={{fontSize:'13px', fontWeight:600, color:'#565656'}}>Time Slot *</span>
+            <span style={{fontSize:'13px', fontWeight:600, color:'#565656'}}>{t('timeSlot')} *</span>
             <select 
               value={form.timeSlot} 
               onChange={e=>setForm({...form, timeSlot:e.target.value})}
@@ -185,14 +187,14 @@ export default function SuggestionForm({ onClose, initialData, editingMarker }) 
                 cursor:'pointer'
               }}
             >
-              <option value="morning">🌅 Morning (6am - 12pm)</option>
-              <option value="noon">☀️ Noon (12pm - 6pm)</option>
-              <option value="evening">🌙 Evening (6pm - 12am)</option>
+              <option value="morning">🌅 {t('morning')} (6am - 12pm)</option>
+              <option value="noon">☀️ {t('noon')} (12pm - 6pm)</option>
+              <option value="evening">🌙 {t('evening')} (6pm - 12am)</option>
             </select>
           </label>
           
           <label style={{display:'flex', flexDirection:'column', gap:'6px'}}>
-            <span style={{fontSize:'13px', fontWeight:600, color:'#565656'}}>Category *</span>
+            <span style={{fontSize:'13px', fontWeight:600, color:'#565656'}}>{t('category')} *</span>
             <select 
               value={form.category} 
               onChange={e=>setForm({...form, category:e.target.value})}
@@ -206,8 +208,8 @@ export default function SuggestionForm({ onClose, initialData, editingMarker }) 
                 cursor:'pointer'
               }}
             >
-              <option value="food">🍽️ Food & Restaurant</option>
-              <option value="event">🎉 Event & Activity</option>
+              <option value="food">🍽️ {t('food')}</option>
+              <option value="event">🎉 {t('event')}</option>
             </select>
           </label>
         </div>
@@ -230,7 +232,7 @@ export default function SuggestionForm({ onClose, initialData, editingMarker }) 
               opacity: loading ? 0.6 : 1
             }}
           >
-            {loading ? 'Saving...' : '✓ Save Marker'}
+            {loading ? '...' : `✓ ${editingMarker ? t('update') : t('submit')}`}
           </button>
           <button 
             type="button" 
@@ -247,7 +249,7 @@ export default function SuggestionForm({ onClose, initialData, editingMarker }) 
               fontFamily:"'Google Sans', sans-serif"
             }}
           >
-            Cancel
+            {t('cancel')}
           </button>
         </div>
       </form>

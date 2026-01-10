@@ -268,12 +268,12 @@
     <header class="admin-header glass">
       <div class="admin-title">
         <img src="./logo.png" alt="Taste & Go" style="height: 40px; width: auto; max-width: 150px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-        <h1 style="display: none; font-size: 1.8rem; font-weight: 700; color: var(--secondary-color);">Admin Dashboard</h1>
+        <h1 style="display: none; font-size: 1.8rem; font-weight: 700; color: var(--secondary-color);" data-i18n="adminDashboard">Admin Dashboard</h1>
       </div>
       <div class="admin-controls">
-        <button class="admin-btn" onclick="refreshData()">Refresh</button>
-        <button class="admin-btn" onclick="window.location.href='/full-stack-web-gis-irem122/login.html'">Back to Home</button>
-        <button class="admin-btn" onclick="logout()">Logout</button>
+        <button class="admin-btn" onclick="refreshData()" data-i18n="refresh">Refresh</button>
+        <button class="admin-btn" onclick="window.location.href='/full-stack-web-gis-irem122/admin-login.html'" data-i18n="backToHome">Back to Home</button>
+        <button class="admin-btn" onclick="logout()" data-i18n="logout">Logout</button>
       </div>
     </header>
 
@@ -282,13 +282,13 @@
       <div class="map-panel glass">
         <div id="map"></div>
         <div class="map-controls">
-          <button class="map-control-btn" onclick="addPointMode()" title="Add Point" id="add-point-btn">
+          <button class="map-control-btn" onclick="addPointMode()" data-i18n-title="addPoint" title="Add Point" id="add-point-btn">
             +
           </button>
-          <button class="map-control-btn" onclick="deletePointMode()" title="Delete Point" id="delete-point-btn">
+          <button class="map-control-btn" onclick="deletePointMode()" data-i18n-title="deletePoint" title="Delete Point" id="delete-point-btn">
             x
           </button>
-          <button class="map-control-btn" onclick="viewAllPoints()" title="All Points">
+          <button class="map-control-btn" onclick="viewAllPoints()" data-i18n-title="allPoints" title="All Points">
             M
           </button>
         </div>
@@ -298,30 +298,38 @@
       <div class="stats-panel">
         <!-- Genel İstatistikler -->
         <div class="stats-card glass">
-          <h3>General Statistics</h3>
+          <h3 data-i18n="generalStatistics">General Statistics</h3>
           <div class="stat-item">
-            <span class="stat-label">Total Points</span>
+            <span class="stat-label" data-i18n="totalPoints">Total Points</span>
             <span class="stat-value" id="total-points">0</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Active Users</span>
+            <span class="stat-label" data-i18n="activeUsers">Active Users</span>
             <span class="stat-value" id="active-users">0</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Daily Visits</span>
+            <span class="stat-label" data-i18n="dailyVisits">Daily Visits</span>
             <span class="stat-value" id="daily-visits">0</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Reports</span>
+            <span class="stat-label" data-i18n="reports">Reports</span>
             <span class="stat-value" id="total-flags">0</span>
           </div>
         </div>
 
         <!-- Recent Activity -->
         <div class="stats-card glass">
-          <h3>Recent Activity</h3>
+          <h3 data-i18n="recentActivity">Recent Activity</h3>
           <div id="recent-activity" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto;">
-            <p style="opacity: 0.7; font-size: 12px;">No activity yet</p>
+            <p style="opacity: 0.7; font-size: 12px;" data-i18n="noActivityYet">No activity yet</p>
+          </div>
+        </div>
+
+        <!-- User Reports -->
+        <div class="stats-card glass">
+          <h3 style="color: #FF4A1C;" data-i18n="userReports">⚠️ User Reports</h3>
+          <div id="reports-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto;">
+            <p style="opacity: 0.7; font-size: 12px;" data-i18n="noReportsYet">No reports yet</p>
           </div>
         </div>
 
@@ -353,7 +361,7 @@
       function logout() {
         localStorage.removeItem('adminSession');
         localStorage.removeItem('adminLoginTime');
-        window.location.href = '/full-stack-web-gis-irem122/login.html';
+        window.location.href = '/full-stack-web-gis-irem122/admin-login.html';
       }
 
       function refreshData() {
@@ -629,8 +637,134 @@
 
     <script type="module">
       import { getSuggestions, createSuggestion } from './pages/js/firebase-client.js';
-      import { ref, remove, getDatabase } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+      import { ref, remove, getDatabase, onValue, update } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
       import { getApps } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+
+      // Load and display reports
+      function loadReports() {
+        const app = getApps()[0];
+        if (!app) {
+          setTimeout(loadReports, 500);
+          return;
+        }
+        
+        const db = getDatabase(app);
+        const reportsRef = ref(db, 'reports');
+        
+        onValue(reportsRef, (snapshot) => {
+          const container = document.getElementById('reports-list');
+          container.innerHTML = '';
+          
+          if (!snapshot.exists()) {
+            container.innerHTML = '<p style="opacity: 0.7; font-size: 12px;">No reports yet</p>';
+            document.getElementById('total-flags').textContent = '0';
+            return;
+          }
+          
+          const reports = [];
+          snapshot.forEach((child) => {
+            reports.push({ id: child.key, ...child.val() });
+          });
+          
+          // Sort by date (newest first)
+          reports.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          
+          // Update total flags count
+          const pendingCount = reports.filter(r => r.status === 'pending').length;
+          document.getElementById('total-flags').textContent = pendingCount;
+          
+          reports.forEach(report => {
+            const reportCard = document.createElement('div');
+            reportCard.style.cssText = `
+              padding: 12px;
+              background: ${report.status === 'pending' ? 'rgba(255, 74, 28, 0.1)' : 'rgba(178, 255, 169, 0.1)'};
+              border-radius: 8px;
+              border-left: 4px solid ${report.status === 'pending' ? '#FF4A1C' : '#B2FFA9'};
+              font-size: 12px;
+            `;
+            
+            const createdDate = new Date(report.createdAt).toLocaleDateString('en-US', {
+              month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+            
+            reportCard.innerHTML = `
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <strong style="color: #FF4A1C;">📍 ${report.suggestionTitle || 'Unknown'}</strong>
+                <span style="font-size: 10px; padding: 2px 6px; border-radius: 10px; background: ${report.status === 'pending' ? '#FF4A1C' : '#4CAF50'}; color: white;">
+                  ${report.status || 'pending'}
+                </span>
+              </div>
+              <p style="margin: 4px 0; color: #333;"><strong>Reason:</strong> ${report.reason || 'No reason'}</p>
+              <p style="margin: 4px 0; color: #666;"><strong>Location:</strong> ${report.suggestionCity || ''}, ${report.suggestionCountry || ''}</p>
+              <p style="margin: 4px 0; color: #666;"><strong>Category:</strong> ${report.suggestionCategory || '-'}</p>
+              <p style="margin: 4px 0; color: #888;"><strong>Reported by:</strong> ${report.reporterEmail || 'Anonymous'}</p>
+              <p style="margin: 4px 0; color: #888;"><strong>Date:</strong> ${createdDate}</p>
+              ${report.status === 'pending' ? `
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                  <button onclick="resolveReport('${report.id}', '${report.suggestionId}')" style="flex: 1; padding: 6px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">✓ Resolve & Delete</button>
+                  <button onclick="dismissReport('${report.id}')" style="flex: 1; padding: 6px; background: #757575; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">✗ Dismiss</button>
+                </div>
+              ` : ''}
+            `;
+            
+            container.appendChild(reportCard);
+          });
+        });
+      }
+      
+      // Resolve report - delete the reported suggestion
+      window.resolveReport = async function(reportId, suggestionId) {
+        if (!confirm('This will DELETE the reported point and mark the report as resolved. Continue?')) {
+          return;
+        }
+        
+        try {
+          const app = getApps()[0];
+          const db = getDatabase(app);
+          
+          // Delete the suggestion
+          if (suggestionId) {
+            const suggestionRef = ref(db, 'suggestions/' + suggestionId);
+            await remove(suggestionRef);
+            
+            // Remove marker from map
+            if (window.markers[suggestionId]) {
+              window.map.removeLayer(window.markers[suggestionId]);
+              delete window.markers[suggestionId];
+            }
+          }
+          
+          // Update report status
+          const reportRef = ref(db, 'reports/' + reportId);
+          await update(reportRef, { status: 'resolved', resolvedAt: new Date().toISOString() });
+          
+          window.showNotification('Report resolved and point deleted');
+          window.addActivity('Report resolved - point deleted');
+        } catch (err) {
+          console.error('Error resolving report:', err);
+          alert('Error: ' + err.message);
+        }
+      };
+      
+      // Dismiss report - mark as reviewed but keep the suggestion
+      window.dismissReport = async function(reportId) {
+        if (!confirm('This will dismiss the report but keep the point. Continue?')) {
+          return;
+        }
+        
+        try {
+          const app = getApps()[0];
+          const db = getDatabase(app);
+          const reportRef = ref(db, 'reports/' + reportId);
+          await update(reportRef, { status: 'dismissed', dismissedAt: new Date().toISOString() });
+          
+          window.showNotification('Report dismissed');
+          window.addActivity('Report dismissed');
+        } catch (err) {
+          console.error('Error dismissing report:', err);
+          alert('Error: ' + err.message);
+        }
+      };
 
       // Make functions globally available
       window.savePoint = async function(lat, lng, city, country) {
@@ -778,6 +912,8 @@
       }
 
       setTimeout(loadMarkers, 500);
+      setTimeout(loadReports, 600);
     </script>
+    <script src="./language-switcher.js"></script>
   </body>
 </html>

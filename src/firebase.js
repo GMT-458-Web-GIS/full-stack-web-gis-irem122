@@ -117,3 +117,28 @@ export async function updateSuggestion(id, payload) {
     updatedAt: timestamp
   })
 }
+
+// Report a suggestion (save complaint to Firebase)
+export async function reportSuggestion(suggestionId, suggestionData, reason) {
+  if (!db) throw new Error('Firebase not initialized')
+  const reportsRef = ref(db, 'reports')
+  const newReportRef = push(reportsRef)
+  const timestamp = new Date().toISOString()
+  const currentUser = getAuth().currentUser || {}
+  
+  const report = {
+    suggestionId,
+    suggestionTitle: suggestionData.title || 'Unknown',
+    suggestionCountry: suggestionData.country || 'Unknown',
+    suggestionCity: suggestionData.city || 'Unknown',
+    suggestionCategory: suggestionData.category || 'Unknown',
+    reason,
+    reportedBy: currentUser.uid || 'anonymous',
+    reporterEmail: currentUser.email || 'Anonymous',
+    createdAt: timestamp,
+    status: 'pending' // pending, reviewed, resolved, dismissed
+  }
+  
+  await set(newReportRef, report)
+  return newReportRef.key
+}

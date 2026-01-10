@@ -22,7 +22,8 @@ export default defineConfig({
         auth: resolve(__dirname, 'auth.html'),
         admin: resolve(__dirname, 'admin.html'),
         adminLogin: resolve(__dirname, 'admin-login.html'),
-        adminDashboard: resolve(__dirname, 'admin-dashboard.html')
+        adminDashboard: resolve(__dirname, 'admin-dashboard.html'),
+        guest: resolve(__dirname, 'guest.html')
       }
     }
   }

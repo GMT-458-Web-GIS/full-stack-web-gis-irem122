@@ -3,6 +3,7 @@ import MapView from './components/Map'
 import SuggestionForm from './components/SuggestionForm'
 import { initFirebase, signOut, getSuggestions, signInAnonymously, deleteSuggestion, updateSuggestion } from './firebase'
 import { getAuth } from 'firebase/auth'
+import { useTranslation } from './translations'
 
 initFirebase()
 
@@ -42,7 +43,9 @@ export default function App() {
   const [activeFilters, setActiveFilters] = useState({ country: '', city: '', timeSlot: '', category: '' })
   const [countries, setCountries] = useState([])
   const [cities, setCities] = useState([])
-  const [userMarkers, setUserMarkers] = useState([])
+  const [allMarkers, setAllMarkers] = useState([]) // All public markers for the map
+  const [userMarkers, setUserMarkers] = useState([]) // Only user's own markers for sidebar
+  const [currentUserId, setCurrentUserId] = useState(null) // Current user's ID
   const [newMarkerData, setNewMarkerData] = useState(null)
   const [mapCenter, setMapCenter] = useState([39.9334, 32.8597]) // Default: Ankara
   const [mapZoom, setMapZoom] = useState(6)
@@ -60,6 +63,7 @@ export default function App() {
       } else {
         // User is logged in (email/password)
         console.log('User logged in:', user.email, user.uid)
+        setCurrentUserId(user.uid) // Store user ID
       }
     })
     
@@ -228,11 +232,18 @@ export default function App() {
     setShowForm(true)
   }
 
-  // Load user's markers
+  // Load all markers for map display
   useEffect(() => {
-    const unsub = getSuggestions({}, setUserMarkers)
+    const unsub = getSuggestions({}, (markers) => {
+      setAllMarkers(markers)
+      // Filter only user's own markers for sidebar
+      if (currentUserId) {
+        const myMarkers = markers.filter(m => m.createdBy === currentUserId)
+        setUserMarkers(myMarkers)
+      }
+    })
     return () => { if (typeof unsub === 'function') unsub() }
-  }, [])
+  }, [currentUserId])
 
   const handleAddMarkerClick = async (latlng) => {
     console.log('Map clicked at:', latlng)
@@ -280,6 +291,8 @@ export default function App() {
   // Don't auto-sign in - let user choose guest or authenticated mode
   // useEffect for auth state tracking if needed later
 
+  const { t } = useTranslation()
+
   return (
     <div style={{height:'100vh', display:'flex', flexDirection:'column', position:'relative', zIndex:1000, fontFamily:"'Google Sans', sans-serif"}}>
       <header style={{
@@ -292,7 +305,7 @@ export default function App() {
         position:'relative', 
         zIndex:1001
       }}>
-        <h3 style={{margin:0, color:'#B2FFA9', fontSize:'20px', fontWeight:600}}>WebGIS — Visitor Suggestion Platform</h3>
+        <h3 style={{margin:0, color:'#B2FFA9', fontSize:'20px', fontWeight:600}}>{t('platformTitle')}</h3>
         <div style={{marginLeft:'auto', display:'flex', gap:12}}>
           <button 
             onClick={()=>setShowForm(true)}
@@ -308,7 +321,7 @@ export default function App() {
               fontSize:'14px',
               transition:'all 0.3s ease'
             }}
-          >Add New Suggestion</button>
+          >{t('addNewSuggestion')}</button>
           <button 
             onClick={()=>{
               console.log('Sign Out clicked!');
@@ -330,7 +343,7 @@ export default function App() {
               fontSize:'14px',
               transition:'all 0.3s ease'
             }}
-          >Sign Out</button>
+          >{t('signOut')}</button>
         </div>
       </header>
 
@@ -352,15 +365,15 @@ export default function App() {
           zIndex:11000,
           fontFamily:"'Google Sans', sans-serif"
         }}>
-          <h4 style={{margin:'0 0 16px 0', color:'#FF4A1C', fontSize:'18px', fontWeight:600, textAlign:'center'}}>Filters</h4>
+          <h4 style={{margin:'0 0 16px 0', color:'#FF4A1C', fontSize:'18px', fontWeight:600, textAlign:'center'}}>{t('filters')}</h4>
           <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
             {/* Searchable Country Dropdown */}
             <label className="searchable-dropdown" style={{display:'flex', flexDirection:'column', gap:'6px', fontSize:'13px', fontWeight:500, color:'#565656', position:'relative'}}>
-              Country
+              {t('country')}
               <div style={{position:'relative'}}>
                 <input 
                   type="text"
-                  placeholder={loadingCountries ? 'Loading countries...' : 'Search & select country...'}
+                  placeholder={loadingCountries ? t('loadingCountries') : t('searchCountry')}
                   value={countrySearch || filters.country}
                   onChange={e => {
                     setCountrySearch(e.target.value)
@@ -428,11 +441,11 @@ export default function App() {
             
             {/* Searchable City Dropdown */}
             <label className="searchable-dropdown" style={{display:'flex', flexDirection:'column', gap:'6px', fontSize:'13px', fontWeight:500, color:'#565656', position:'relative'}}>
-              City
+              {t('city')}
               <div style={{position:'relative'}}>
                 <input 
                   type="text"
-                  placeholder={!filters.country ? 'Select country first' : loadingCities ? 'Loading cities...' : 'Search & select city...'}
+                  placeholder={!filters.country ? t('selectCountryFirst') : loadingCities ? t('loadingCities') : t('searchCity')}
                   value={citySearch || filters.city}
                   onChange={e => {
                     setCitySearch(e.target.value)
@@ -498,7 +511,7 @@ export default function App() {
               </div>
             </label>
             <label style={{display:'flex', flexDirection:'column', gap:'6px', fontSize:'13px', fontWeight:500, color:'#565656'}}>
-              Time
+              {t('time')}
               <select 
                 value={filters.timeSlot} 
                 onChange={e=>setFilters({...filters, timeSlot:e.target.value})}
@@ -513,14 +526,14 @@ export default function App() {
                   transition:'all 0.3s ease'
                 }}
               >
-                <option value="">All</option>
-                <option value="morning">Morning</option>
-                <option value="noon">Noon</option>
-                <option value="evening">Evening</option>
+                <option value="">{t('all')}</option>
+                <option value="morning">{t('morning')}</option>
+                <option value="noon">{t('noon')}</option>
+                <option value="evening">{t('evening')}</option>
               </select>
             </label>
             <label style={{display:'flex', flexDirection:'column', gap:'6px', fontSize:'13px', fontWeight:500, color:'#565656'}}>
-              Category
+              {t('category')}
               <select 
                 value={filters.category} 
                 onChange={e=>setFilters({...filters, category:e.target.value})}
@@ -535,9 +548,9 @@ export default function App() {
                   transition:'all 0.3s ease'
                 }}
               >
-                <option value="">All</option>
-                <option value="food">Food</option>
-                <option value="event">Event</option>
+                <option value="">{t('all')}</option>
+                <option value="food">{t('food')}</option>
+                <option value="event">{t('event')}</option>
               </select>
             </label>
             
@@ -559,7 +572,7 @@ export default function App() {
                   transition:'all 0.3s ease'
                 }}
               >
-                🔍 Search
+                🔍 {t('search')}
               </button>
               <button
                 onClick={() => {
@@ -579,20 +592,15 @@ export default function App() {
                   transition:'all 0.3s ease'
                 }}
               >
-                ✕ Clear
+                ✕ {t('clear')}
               </button>
             </div>
           </div>
           
-          {/* User Markers List */}
+          {/* User's Own Markers List - Only markers created by current user */}
           <div style={{marginTop:'20px', paddingTop:'20px', borderTop:'1px solid rgba(86, 86, 86, 0.2)'}}>
             <h4 style={{margin:'0 0 12px 0', color:'#FF4A1C', fontSize:'16px', fontWeight:600}}>
-              Markers ({userMarkers.filter(m => 
-                matchCountry(m.country, activeFilters.country) &&
-                (!activeFilters.city || m.city?.toLowerCase().includes(activeFilters.city.toLowerCase())) &&
-                (!activeFilters.timeSlot || m.timeSlot === activeFilters.timeSlot) &&
-                (!activeFilters.category || m.category === activeFilters.category)
-              ).length})
+              📍 {t('myMarkers')} ({userMarkers.length})
             </h4>
             <div style={{
               maxHeight:'300px', 
@@ -601,22 +609,12 @@ export default function App() {
               flexDirection:'column',
               gap:'8px'
             }}>
-              {userMarkers.filter(m => 
-                matchCountry(m.country, activeFilters.country) &&
-                (!activeFilters.city || m.city?.toLowerCase().includes(activeFilters.city.toLowerCase())) &&
-                (!activeFilters.timeSlot || m.timeSlot === activeFilters.timeSlot) &&
-                (!activeFilters.category || m.category === activeFilters.category)
-              ).length === 0 ? (
+              {userMarkers.length === 0 ? (
                 <p style={{fontSize:'13px', color:'#999', textAlign:'center', margin:'20px 0'}}>
-                  No markers found. Try different filters or add a new one!
+                  {t('noMarkersYet')}
                 </p>
               ) : (
-                userMarkers.filter(m => 
-                  matchCountry(m.country, activeFilters.country) &&
-                  (!activeFilters.city || m.city?.toLowerCase().includes(activeFilters.city.toLowerCase())) &&
-                  (!activeFilters.timeSlot || m.timeSlot === activeFilters.timeSlot) &&
-                  (!activeFilters.category || m.category === activeFilters.category)
-                ).map(marker => (
+                userMarkers.map(marker => (
                   <div 
                     key={marker.id}
                     style={{
@@ -660,7 +658,7 @@ export default function App() {
                             fontSize:'10px',
                             fontWeight:600
                           }}
-                          title="Edit marker"
+                          title={t('edit')}
                         >
                           ✏️
                         </button>
@@ -682,7 +680,7 @@ export default function App() {
                             fontSize:'10px',
                             fontWeight:600
                           }}
-                          title="Delete marker"
+                          title={t('delete')}
                         >
                           🗑️
                         </button>

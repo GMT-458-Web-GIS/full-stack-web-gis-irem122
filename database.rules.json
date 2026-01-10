@@ -4,6 +4,10 @@
       ".read": true,
       ".write": "auth != null"
     },
+    "reports": {
+      ".read": true,
+      ".write": "auth != null"
+    },
     "users": {
       ".read": true,
       "$uid": {

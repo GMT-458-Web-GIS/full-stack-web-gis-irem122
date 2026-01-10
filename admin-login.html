@@ -144,27 +144,27 @@
     </style>
   </head>
   <body>
-    <a href="/index.html" class="back-link">Back to Home</a>
+    <a href="/index.html" class="back-link" data-i18n="backToHome">Back to Home</a>
     
     <div class="admin-login-card glass">
       <div class="admin-title">
         <img src="./logo.png" alt="Taste & Go" style="height: 60px; width: auto; max-width: 200px; margin-bottom: 10px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-        <h1 style="display: none; font-size: 2.5rem; font-weight: 700; color: var(--secondary-color); margin-bottom: 10px;">Admin</h1>
+        <h1 style="display: none; font-size: 2.5rem; font-weight: 700; color: var(--secondary-color); margin-bottom: 10px;" data-i18n="admin">Admin</h1>
       </div>
-      <p class="admin-subtitle">Management Panel</p>
+      <p class="admin-subtitle" data-i18n="managementPanel">Management Panel</p>
       
       <form id="admin-form">
         <div class="form-group">
-          <label class="form-label">Username</label>
-          <input type="text" id="username" class="form-input" placeholder="Enter your username" required>
+          <label class="form-label" data-i18n="username">Username</label>
+          <input type="text" id="username" class="form-input" data-i18n-placeholder="enterUsername" placeholder="Enter your username" required>
         </div>
         
         <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+          <label class="form-label" data-i18n="password">Password</label>
+          <input type="password" id="password" class="form-input" data-i18n-placeholder="enterPassword" placeholder="Enter your password" required>
         </div>
         
-        <button type="submit" class="login-btn">Sign In</button>
+        <button type="submit" class="login-btn" data-i18n="signIn">Sign In</button>
         
         <div id="error-msg" class="error-msg"></div>
       </form>
@@ -173,5 +173,6 @@
     <script type="module">
       import('./pages/js/admin-login.js');
     </script>
+    <script src="./language-switcher.js"></script>
   </body>
 </html>
