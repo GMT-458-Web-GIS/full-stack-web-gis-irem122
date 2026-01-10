@@ -112,26 +112,27 @@
       }
     }
   </style>
-  <script type="module" crossorigin src="/full-stack-web-gis-irem122/assets/main-DIkw5hNi.js"></script>
-  <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/firebase-config-DxLbwtvt.js">
-  <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/firebase-client-Bklma2ql.js">
+  <script type="module" crossorigin src="/full-stack-web-gis-irem122/assets/main-BB9MNgvt.js"></script>
+  <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/preload-helper-BmvMH90o.js">
 </head>
 <body>
   <main class="welcome-container">
     <div class="welcome-title">
-      <img src="/full-stack-web-gis-irem122/logo.png" alt="Taste & Go" style="height: 80px; width: auto; max-width: 300px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+      <img src="./logo.png" alt="Taste & Go" style="height: 80px; width: auto; max-width: 300px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
       <h1 style="display: none; font-size: 4rem; color: #B2FFA9; margin: 0; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">Taste & Go</h1>
     </div>
-    <p class="welcome-subtitle">
+    <p class="welcome-subtitle" data-i18n="slogan">
       Taste, pin and share it!
     </p>
     
     <div class="auth-options">
-      <a href="/auth.html?mode=login" class="auth-btn">Sign In</a>
-      <a href="/auth.html?mode=register" class="auth-btn secondary">Sign Up</a>
-      <a href="/map.html" class="auth-btn guest" id="guestBtn">Continue as Guest</a>
+      <a href="./auth.html?mode=login" class="auth-btn" data-i18n="login">Sign In</a>
+      <a href="./auth.html?mode=register" class="auth-btn secondary" data-i18n="register">Sign Up</a>
+      <a href="./map.html" class="auth-btn guest" id="guestBtn" data-i18n="continueAsGuest">Continue as Guest</a>
     </div>
   </main>
 
+  <script src="/full-stack-web-gis-irem122/language-switcher.js"></script>
 </body>
 </html>

@@ -93,31 +93,33 @@
         display: none;
       }
     </style>
-    <script type="module" crossorigin src="/full-stack-web-gis-irem122/assets/auth-CDHU481j.js"></script>
-    <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/firebase-config-DxLbwtvt.js">
-    <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/firebase-client-Bklma2ql.js">
+    <script type="module" crossorigin src="/full-stack-web-gis-irem122/assets/auth-BrVffIt0.js"></script>
+    <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/modulepreload-polyfill-B5Qt9EMX.js">
+    <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/preload-helper-BmvMH90o.js">
     <link rel="stylesheet" crossorigin href="/full-stack-web-gis-irem122/assets/style-BJLvbmFw.css">
   </head>
   <body>
     <div class="auth-card">
-      <h2 id="form-title">Login</h2>
+      <h2 id="form-title" data-i18n="login">Login</h2>
 
         <form id="auth-form">
-          <input type="email" id="email" placeholder="Email" required />
-          <input type="password" id="password" placeholder="Password" minlength="6" required />
+          <input type="email" id="email" data-i18n-placeholder="email" placeholder="Email" required />
+          <input type="password" id="password" data-i18n-placeholder="password" placeholder="Password" minlength="6" required />
           <div class="actions">
-            <button id="submit-btn" type="submit">Sign In</button>
-            <button id="toggle-btn" type="button">Sign Up</button>
+            <button id="submit-btn" type="submit" data-i18n="login">Sign In</button>
+            <button id="toggle-btn" type="button" data-i18n="register">Sign Up</button>
           </div>
         </form>
 
         <div id="message" class="msg"></div>
-        <button id="signout-btn" class="hidden" style="width:100%;padding:15px;background:#565656;color:white;border:none;border-radius:12px;font-family:'Google Sans',sans-serif;font-weight:600;margin-top:15px;">Sign Out</button>
+        <button id="signout-btn" class="hidden" style="width:100%;padding:15px;background:#565656;color:white;border:none;border-radius:12px;font-family:'Google Sans',sans-serif;font-weight:600;margin-top:15px;" data-i18n="signOut">Sign Out</button>
         
         <div style="text-align:center;margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.2);">
-          <a href="/admin-login.html" style="color:#B2FFA9;text-decoration:none;font-size:14px;opacity:0.8;font-family:'Google Sans',sans-serif;">Admin Login</a>
+          <a href="./admin-login.html" style="color:#B2FFA9;text-decoration:none;font-size:14px;opacity:0.8;font-family:'Google Sans',sans-serif;" data-i18n="adminLogin">Admin Login</a>
         </div>
       </div>
 
+    <script src="/full-stack-web-gis-irem122/language-switcher.js"></script>
   </body>
 </html>
+
