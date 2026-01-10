@@ -56,39 +56,26 @@ export default function App() {
   useEffect(() => {
     const auth = getAuth()
     
-    // Wait for auth state to be ready - only redirect after 3 seconds if no user
-    let redirectTimeout = null
-    
+    // Wait for auth state to be ready
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      // Clear any pending redirect
-      if (redirectTimeout) {
-        clearTimeout(redirectTimeout)
-        redirectTimeout = null
-      }
-      
-      setAuthLoading(false)
-      
-      if (user) {
-        // User is logged in
-        console.log('User logged in:', user.email)
-        setCurrentUserId(user.uid)
-      } else {
-        // No user - wait 3 seconds before redirecting (give Firebase time to restore session)
-        console.log('No user detected, will redirect in 3 seconds...')
-        redirectTimeout = setTimeout(() => {
-          // Double check there's still no user
+      setAuthLoading(false) // Auth state is now ready
+      if (!user) {
+        console.log('No user found')
+        // Give Firebase a moment to restore session, then redirect
+        setTimeout(() => {
           if (!auth.currentUser) {
-            console.log('Still no user, redirecting to login')
+            console.log('Redirecting to login...')
             window.location.href = '/full-stack-web-gis-irem122/login.html'
           }
-        }, 3000)
+        }, 1500)
+      } else {
+        // User is logged in (email/password)
+        console.log('User logged in:', user.email, user.uid)
+        setCurrentUserId(user.uid) // Store user ID
       }
     })
     
-    return () => {
-      unsubscribe()
-      if (redirectTimeout) clearTimeout(redirectTimeout)
-    }
+    return () => unsubscribe()
   }, [])
 
   const [loadingCountries, setLoadingCountries] = useState(true)
