@@ -8,6 +8,11 @@ import {
 } from './firebase-client.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
 
+// Wait for Leaflet to load
+if (typeof L === 'undefined') {
+  console.error('Leaflet library not loaded');
+}
+
 // Admin session check
 function checkAdminSession() {
   const adminSession = localStorage.getItem('adminSession');
@@ -577,7 +582,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Initialize even without Firebase auth (using localStorage)
-    initMap();
+    // Wait a tick to ensure Leaflet is loaded
+    if (typeof L !== 'undefined') {
+      initMap();
+    } else {
+      console.warn('Leaflet not available, retrying...');
+      setTimeout(() => {
+        if (typeof L !== 'undefined') {
+          initMap();
+        } else {
+          console.error('Leaflet still not available!');
+        }
+      }, 100);
+    }
     updateStats();
     updateUserList();
     addActivityLog('Admin panel initialized');
