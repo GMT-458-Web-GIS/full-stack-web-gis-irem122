@@ -47,6 +47,18 @@ if (toggleBtn) {
 }
 
 /* ---------------- FORM SUBMIT ---------------- */
+// Redirect function
+function redirectToMap() {
+  console.log('Redirecting to map...')
+  const mapUrl = 'https://gmt-458-web-gis.github.io/full-stack-web-gis-irem122/map.html'
+  // Try multiple redirect methods for Safari compatibility
+  try {
+    window.location.assign(mapUrl)
+  } catch(e) {
+    window.location.href = mapUrl
+  }
+}
+
 if (form) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
@@ -58,23 +70,36 @@ if (form) {
 
     try {
       if (mode === 'register') {
+        console.log('Registering user...')
         const userCred = await createUserWithEmailAndPassword(auth, email, password)
-        await createUserProfile(userCred.user, 'contributor')
-        messageEl.textContent = 'Registration successful. Redirecting...'
-        // Direct redirect without setTimeout for Safari compatibility
-        window.location.href = 'https://gmt-458-web-gis.github.io/full-stack-web-gis-irem122/map.html'
-        return // Stop execution
+        console.log('User created:', userCred.user.uid)
+        
+        // Don't wait for profile creation - redirect immediately
+        createUserProfile(userCred.user, 'contributor').catch(err => console.error('Profile error:', err))
+        
+        messageEl.textContent = 'Registration successful! Redirecting...'
+        messageEl.style.color = '#B2FFA9'
+        
+        // Immediate redirect
+        redirectToMap()
       } else {
+        console.log('Logging in user...')
         const userCred = await signInWithEmailAndPassword(auth, email, password)
-        await updateLastLogin(userCred.user.uid)
-        messageEl.textContent = 'Login successful. Redirecting...'
-        // Direct redirect without setTimeout for Safari compatibility
-        window.location.href = 'https://gmt-458-web-gis.github.io/full-stack-web-gis-irem122/map.html'
-        return // Stop execution
+        console.log('User logged in:', userCred.user.uid)
+        
+        // Don't wait for lastLogin update - redirect immediately
+        updateLastLogin(userCred.user.uid).catch(err => console.error('LastLogin error:', err))
+        
+        messageEl.textContent = 'Login successful! Redirecting...'
+        messageEl.style.color = '#B2FFA9'
+        
+        // Immediate redirect
+        redirectToMap()
       }
     } catch (err) {
-      console.error(err)
+      console.error('Auth error:', err)
       messageEl.textContent = err?.message || 'An error occurred'
+      messageEl.style.color = '#FF4A1C'
       submitBtn.disabled = false
     }
   })
