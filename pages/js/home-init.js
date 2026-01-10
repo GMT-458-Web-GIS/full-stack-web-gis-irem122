@@ -1,5 +1,5 @@
 // Home page initialization
-import { auth } from './pages/js/firebase-client.js';
+import { auth } from './firebase-client.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
 
 // Set localStorage for guest button
