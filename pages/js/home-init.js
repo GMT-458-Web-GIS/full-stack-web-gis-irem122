@@ -7,7 +7,7 @@ document.getElementById('guestBtn').addEventListener('click', (e) => {
   localStorage.setItem('guest', 'true');
 });
 
-// Redirect logged-in user to map (sadece giriş yapmışsa)
+// Redirect logged-in user to map (only if email/password authenticated, not anonymous)
 onAuthStateChanged(auth, (user) => {
   // Don't redirect if coming from guest logout
   const wasGuest = localStorage.getItem('guest') === 'true'
@@ -16,11 +16,8 @@ onAuthStateChanged(auth, (user) => {
     return
   }
   
-  if (user) {
-    // Only redirect if actually logged in (not anonymous)
-    if (user.isAnonymous) {
-      return;
-    }
+  if (user && !user.isAnonymous) {
+    // Only redirect if user is authenticated with email/password (not anonymous)
     window.location.href = './map.html';
   }
 });
