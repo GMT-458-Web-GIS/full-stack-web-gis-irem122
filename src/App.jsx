@@ -443,12 +443,27 @@ export default function App() {
             }}
           >{t('addNewSuggestion')}</button>
           <button 
-            onClick={()=>{
+            onClick={async ()=>{
               console.log('Sign Out clicked!');
-              sessionStorage.setItem('logout_in_progress', 'true');
-              signOut().catch(err => console.error('Sign out error:', err));
+              // First redirect, THEN sign out - this prevents auth guard from redirecting to login
+              // while we're still on the page
               const loginUrl = window.location.origin + '/full-stack-web-gis-irem122/login.html';
               console.log('Redirecting to:', loginUrl);
+              
+              // Sign out from Firebase
+              try {
+                await signOut();
+                console.log('Firebase sign out complete');
+              } catch (err) {
+                console.error('Sign out error:', err);
+              }
+              
+              // Clear all session flags
+              sessionStorage.removeItem('logout_in_progress');
+              sessionStorage.removeItem('justRegistered');
+              sessionStorage.removeItem('newUserId');
+              
+              // Now redirect
               window.location.href = loginUrl;
             }}
             style={{

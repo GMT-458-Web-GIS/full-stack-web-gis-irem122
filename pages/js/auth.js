@@ -68,6 +68,15 @@ if (urlMode === 'register' || urlMode === 'login') {
 }
 log('STATE', `Initial mode: ${mode}`)
 
+/* ---------------- CLEAR LOGOUT FLAG ON AUTH PAGE LOAD ---------------- */
+// CRITICAL: Clear the logout flag when user arrives at auth page
+// This prevents the flag from blocking future logins
+const logoutFlag = sessionStorage.getItem('logout_in_progress')
+if (logoutFlag) {
+  log('CLEANUP', '🧹 Clearing logout_in_progress flag from previous session')
+  sessionStorage.removeItem('logout_in_progress')
+}
+
 /* ---------------- CHECK EXISTING AUTH STATE ---------------- */
 log('AUTH_CHECK', 'Checking existing auth state...')
 log('AUTH_CHECK', `auth object exists: ${!!auth}`)
@@ -185,6 +194,11 @@ if (form) {
     log('FORM', 'Submit button disabled')
 
     try {
+      // CRITICAL: Clear logout flag BEFORE any auth operation
+      // This ensures map-init.js won't redirect back to login
+      sessionStorage.removeItem('logout_in_progress')
+      log('CLEANUP', '🧹 Cleared logout_in_progress flag before auth')
+      
       if (mode === 'register') {
         log('REGISTER', '=== REGISTRATION START ===')
         log('REGISTER', 'Calling createUserWithEmailAndPassword...')
