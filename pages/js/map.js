@@ -882,6 +882,9 @@ function init() {
   // initial load countries
   loadCountries().catch(()=>{})
 
+  // Flag to prevent map click during report
+  let reportInProgress = false
+  
   function renderSuggestions(list) {
     // clear existing markers
     Object.values(markers).forEach(m => map.removeLayer(m))
@@ -904,10 +907,13 @@ function init() {
         e.stopPropagation()
         e.preventDefault()
         L.DomEvent.stopPropagation(e)
+        reportInProgress = true
+        
         if (!auth.currentUser) {
           if (confirm('You must sign in to report. Go to login page?')) {
             window.location.href = './auth.html'
           }
+          reportInProgress = false
           return
         }
         try {
@@ -917,6 +923,7 @@ function init() {
           console.error(err)
           alert('Failed to submit report.')
         }
+        reportInProgress = false
       })
       popup.appendChild(document.createElement('hr'))
       popup.appendChild(flagBtn)
@@ -1038,6 +1045,9 @@ function init() {
     
     map.on('click', async (e) => {
       if (!addMode || !cachedUser) return
+      
+      // Don't trigger if report is in progress
+      if (reportInProgress) return
       
       // Don't trigger if a popup is open
       if (popupOpen) return
