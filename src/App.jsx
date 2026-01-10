@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import MapView from './components/Map'
 import SuggestionForm from './components/SuggestionForm'
-import { initFirebase, signInAnonymously, signOut } from './firebase'
+import { initFirebase, signOut } from './firebase'
 
 initFirebase()
 
@@ -9,10 +9,8 @@ export default function App() {
   const [showForm, setShowForm] = useState(false)
   const [filters, setFilters] = useState({ country: '', city: '', timeSlot: '', category: '' })
 
-  useEffect(() => {
-    // örnek: anonim auth, gerçek projede email/password kullanın
-    signInAnonymously().catch(()=>{})
-  }, [])
+  // Don't auto-sign in - let user choose guest or authenticated mode
+  // useEffect for auth state tracking if needed later
 
   return (
     <div style={{height:'100vh', display:'flex', flexDirection:'column'}}>
@@ -20,7 +18,10 @@ export default function App() {
         <h3 style={{margin:0}}>WebGIS — Visitor Suggestion Platform</h3>
         <div style={{marginLeft:'auto', display:'flex', gap:8}}>
           <button onClick={()=>setShowForm(true)}>Add New Suggestion</button>
-          <button onClick={()=>signOut()}>Sign Out</button>
+          <button onClick={async ()=>{
+            await signOut();
+            window.location.href = './index.html';
+          }}>Sign Out</button>
         </div>
       </header>
 
