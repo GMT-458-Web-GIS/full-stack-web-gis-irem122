@@ -897,7 +897,7 @@ function init() {
       flagBtn.addEventListener('click', async () => {
         if (!auth.currentUser) {
           if (confirm('You must sign in to report. Go to login page?')) {
-            window.location.href = '../auth.html'
+            window.location.href = './auth.html'
           }
           return
         }
@@ -1003,7 +1003,7 @@ function init() {
       // Check if user is authenticated
       if (!cachedUser) {
         if (confirm('You must sign in to add events. Go to login page?')) {
-          window.location.href = '../auth.html?mode=login'
+          window.location.href = './auth.html?mode=login'
         }
         return
       }
@@ -1043,7 +1043,7 @@ function init() {
     function showAddEventPanel(lat, lng, locationData) {
       if (!cachedUser) {
         if (confirm('You must sign in to save. Go to login page?')) {
-          window.location.href = '../auth.html'
+          window.location.href = './auth.html'
         }
         return
       }
