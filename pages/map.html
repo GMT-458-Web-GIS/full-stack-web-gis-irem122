@@ -15,9 +15,10 @@
     <div id="map"></div>
     <div id="root"></div>
     <!-- Map scripts -->
-    <script type="module" src="./js/map.js"></script>
-    <script type="module" src="./js/guest.js"></script>
     <script type="module">
+      import('./js/map.js');
+      import('./js/guest.js');
+      
       // React app'i sadece giriş yapmış kullanıcılar için yükle
       const urlParams = new URLSearchParams(window.location.search);
       const isGuest = urlParams.get('guest');
