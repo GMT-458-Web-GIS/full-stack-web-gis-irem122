@@ -899,32 +899,41 @@ function init() {
       const flagBtn = document.createElement('button')
       flagBtn.textContent = 'Report'
       flagBtn.style.marginTop = '8px'
-      flagBtn.addEventListener('click', async (e) => {
+      flagBtn.style.cursor = 'pointer'
+      
+      // Use mousedown instead of click - it fires before map click
+      flagBtn.addEventListener('mousedown', async (e) => {
         e.stopPropagation()
+        e.stopImmediatePropagation()
         e.preventDefault()
         
-        // Close any open add-event panel immediately
-        const existingPanel = document.getElementById('add-event-panel')
-        if (existingPanel) existingPanel.remove()
+        // Set global flag to block map click
+        window._reportClicked = true
         
-        // Remove preview marker if any
-        if (typeof addPreviewMarker !== 'undefined' && addPreviewMarker) {
-          map.removeLayer(addPreviewMarker)
-        }
+        // Close popup first
+        m.closePopup()
         
-        if (!auth.currentUser) {
-          if (confirm('You must sign in to report. Go to login page?')) {
-            window.location.href = './auth.html'
+        setTimeout(async () => {
+          // Close any open add-event panel
+          const existingPanel = document.getElementById('add-event-panel')
+          if (existingPanel) existingPanel.remove()
+          
+          if (!auth.currentUser) {
+            if (confirm('You must sign in to report. Go to login page?')) {
+              window.location.href = './auth.html'
+            }
+            window._reportClicked = false
+            return
           }
-          return
-        }
-        try {
-          await flagSuggestion(s.id, 'Inappropriate content')
-          alert('Report submitted.')
-        } catch (err) {
-          console.error(err)
-          alert('Failed to submit report.')
-        }
+          try {
+            await flagSuggestion(s.id, 'Inappropriate content')
+            alert('Report submitted.')
+          } catch (err) {
+            console.error(err)
+            alert('Failed to submit report.')
+          }
+          window._reportClicked = false
+        }, 100)
       })
       popup.appendChild(document.createElement('hr'))
       popup.appendChild(flagBtn)
@@ -1047,6 +1056,9 @@ function init() {
     map.on('click', async (e) => {
       if (!addMode || !cachedUser) return
       
+      // Don't trigger if report button was clicked
+      if (window._reportClicked) return
+      
       // Don't trigger if report is in progress
       if (reportInProgress) return
       
@@ -1056,7 +1068,7 @@ function init() {
       // Don't trigger if clicking on a popup or marker
       if (e.originalEvent && e.originalEvent.target) {
         const target = e.originalEvent.target
-        if (target.closest('.leaflet-popup') || target.closest('.leaflet-marker-icon')) {
+        if (target.closest('.leaflet-popup') || target.closest('.leaflet-marker-icon') || target.closest('button')) {
           return
         }
       }
