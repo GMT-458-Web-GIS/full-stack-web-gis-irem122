@@ -914,7 +914,7 @@ function init() {
     Object.values(markers).forEach(m => map.removeLayer(m))
     markers = {}
     list.forEach(s => {
-      // Create marker - don't use click events at all
+      // Create marker
       const m = L.marker([s.lat, s.lng]).addTo(map)
       
       // Create simple HTML popup with onclick attribute
@@ -929,14 +929,26 @@ function init() {
       `
       m.bindPopup(popupContent)
       
-      // OVERRIDE default click behavior - manually open popup and block map click
-      m.off('click') // Remove default click handler
-      m.on('click', (e) => {
-        L.DomEvent.stop(e) // Stop event completely
-        markerClicked = true
-        m.openPopup()
-        setTimeout(() => { markerClicked = false }, 500)
+      // Get the marker's DOM element and add mousedown handler
+      m.on('add', () => {
+        const icon = m.getElement()
+        if (icon) {
+          // Remove all existing event listeners
+          icon.style.pointerEvents = 'auto'
+          
+          // Add mousedown handler (fires before click)
+          icon.addEventListener('mousedown', (e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            markerClicked = true
+            m.openPopup()
+            setTimeout(() => { markerClicked = false }, 500)
+          }, true) // Use capture phase
+        }
       })
+      
+      // Completely disable the default click behavior
+      m.off('click')
       
       markers[s.id] = m
     })
