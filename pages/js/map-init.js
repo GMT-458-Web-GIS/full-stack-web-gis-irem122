@@ -48,7 +48,7 @@ if (!isGuest) {
   `;
   backBtn.onclick = () => {
     localStorage.removeItem('guest');
-    window.location.href = './index.html';
+    window.location.href = '/full-stack-web-gis-irem122/index.html';
   };
   
   header.appendChild(title);

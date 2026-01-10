@@ -20,7 +20,8 @@ export default function App() {
           <button onClick={()=>setShowForm(true)}>Add New Suggestion</button>
           <button onClick={async ()=>{
             await signOut();
-            window.location.href = './index.html';
+            // Redirect to home - use absolute path with base URL
+            window.location.href = '/full-stack-web-gis-irem122/index.html';
           }}>Sign Out</button>
         </div>
       </header>
