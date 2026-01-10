@@ -941,8 +941,12 @@ function init() {
             e.stopPropagation()
             e.preventDefault()
             markerClicked = true
+            popupOpen = true // Manually set popup flag IMMEDIATELY
             m.openPopup()
-            setTimeout(() => { markerClicked = false }, 500)
+            // Keep popupOpen true for 3 seconds to handle Leaflet internals
+            setTimeout(() => { 
+              markerClicked = false
+            }, 3000)
           }, true) // Use capture phase
         }
       })
