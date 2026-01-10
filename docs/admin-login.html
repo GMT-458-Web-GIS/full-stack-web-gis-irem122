@@ -142,12 +142,12 @@
         background: rgba(255, 255, 255, 0.2);
       }
     </style>
-    <script type="module" crossorigin src="/full-stack-web-gis-irem122/assets/adminLogin-Y3U-cTBr.js"></script>
+    <script type="module" crossorigin src="/full-stack-web-gis-irem122/assets/adminLogin-BIc9p0nU.js"></script>
     <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/modulepreload-polyfill-B5Qt9EMX.js">
     <link rel="modulepreload" crossorigin href="/full-stack-web-gis-irem122/assets/preload-helper-BmvMH90o.js">
   </head>
   <body>
-    <a href="/full-stack-web-gis-irem122/login.html" class="back-link" data-i18n="backToHome">Back to Home</a>
+    <a href="#" onclick="goToHome()" class="back-link" data-i18n="backToHome">Back to Home</a>
     
     <div class="admin-login-card glass">
       <div class="admin-title">
@@ -173,6 +173,14 @@
       </form>
     </div>
 
+    <script>
+      function goToHome() {
+        localStorage.removeItem('adminSession');
+        localStorage.removeItem('adminLoginTime');
+        sessionStorage.setItem('logout_in_progress', 'true');
+        window.location.href = '/full-stack-web-gis-irem122/login.html';
+      }
+    </script>
     <script src="/full-stack-web-gis-irem122/language-switcher.js"></script>
   </body>
 </html>

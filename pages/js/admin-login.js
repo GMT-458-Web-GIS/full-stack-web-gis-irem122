@@ -43,16 +43,24 @@ document.getElementById('admin-form').addEventListener('submit', async function(
   }
 });
 
-// Check if already logged in as admin
-if (localStorage.getItem('adminSession') === 'true') {
-  const loginTime = localStorage.getItem('adminLoginTime');
-  const now = Date.now();
-  const sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
-  
-  if (loginTime && (now - parseInt(loginTime)) < sessionDuration) {
-    window.location.href = './admin-dashboard.html';
-  } else {
-    localStorage.removeItem('adminSession');
-    localStorage.removeItem('adminLoginTime');
+// Check if user just logged out - don't auto-redirect
+const justLoggedOut = sessionStorage.getItem('logout_in_progress');
+if (justLoggedOut) {
+  sessionStorage.removeItem('logout_in_progress');
+  localStorage.removeItem('adminSession');
+  localStorage.removeItem('adminLoginTime');
+} else {
+  // Check if already logged in as admin
+  if (localStorage.getItem('adminSession') === 'true') {
+    const loginTime = localStorage.getItem('adminLoginTime');
+    const now = Date.now();
+    const sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
+    
+    if (loginTime && (now - parseInt(loginTime)) < sessionDuration) {
+      window.location.href = './admin-dashboard.html';
+    } else {
+      localStorage.removeItem('adminSession');
+      localStorage.removeItem('adminLoginTime');
+    }
   }
 }
