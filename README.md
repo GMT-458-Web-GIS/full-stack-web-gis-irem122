@@ -1,3 +1,4 @@
+
 # WebGIS — MVP
 
 1. Dependencies:
@@ -14,3 +15,6 @@
    - functions için gerçek service account ekleyin
 
 Not: Bu repo iskelet olup, API anahtarlarını ve servis hesaplarını gerçek değerlerle güncelleyin.
+
+
+
