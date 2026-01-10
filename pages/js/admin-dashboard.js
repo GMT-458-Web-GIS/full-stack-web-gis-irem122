@@ -38,6 +38,22 @@ if (!checkAdminSession()) {
 let map, markers = {}, addMode = false, deleteMode = false, currentUser = null, addPreviewMarker = null, addPanel = null;
 
 function initMap() {
+  console.log('initMap called');
+  
+  // Check if map already initialized
+  if (map) {
+    console.log('Map already initialized');
+    return;
+  }
+  
+  const mapElement = document.getElementById('map');
+  if (!mapElement) {
+    console.error('Map element not found!');
+    return;
+  }
+  
+  console.log('Map element found, dimensions:', mapElement.offsetWidth, 'x', mapElement.offsetHeight);
+  
   // Fix default icon URLs for CDN build
   delete L.Icon.Default.prototype._getIconUrl;
   L.Icon.Default.mergeOptions({
@@ -46,17 +62,30 @@ function initMap() {
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
   });
 
-  map = L.map('map').setView([39.925533, 32.866287], 6);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+  try {
+    map = L.map('map').setView([39.925533, 32.866287], 6);
+    console.log('Map created successfully');
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    console.log('Tile layer added');
 
-  // Map click handler
-  map.on('click', handleMapClick);
+    // Map click handler
+    map.on('click', handleMapClick);
 
-  // Load existing suggestions
-  loadSuggestions();
+    // Force map to recalculate size after a short delay
+    setTimeout(() => {
+      map.invalidateSize();
+      console.log('Map size invalidated');
+    }, 100);
+
+    // Load existing suggestions
+    loadSuggestions();
+  } catch (err) {
+    console.error('Error initializing map:', err);
+  }
 }
 
 async function handleMapClick(e) {
@@ -557,6 +586,8 @@ function escapeHtml(text) {
 
 // Initialize everything
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('Admin dashboard DOMContentLoaded');
+  
   // Check localStorage admin session first
   const adminSession = localStorage.getItem('adminSession');
   const loginTime = localStorage.getItem('adminLoginTime');
@@ -570,6 +601,21 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  // Initialize map immediately if Leaflet is ready
+  function tryInitMap() {
+    console.log('Trying to init map, Leaflet available:', typeof L !== 'undefined');
+    if (typeof L !== 'undefined' && document.getElementById('map')) {
+      console.log('Initializing map...');
+      initMap();
+      updateStats();
+      updateUserList();
+      addActivityLog('Admin panel initialized');
+    } else {
+      console.warn('Leaflet or map element not ready, retrying in 200ms...');
+      setTimeout(tryInitMap, 200);
+    }
+  }
+
   // Wait for auth state (optional for admin, localStorage is primary)
   onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -577,28 +623,12 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Admin authenticated via Firebase:', user.email);
     } else {
       console.log('No Firebase user, using localStorage admin session');
-      // Don't set mock user - this causes permission errors
       currentUser = null;
     }
-    
-    // Initialize even without Firebase auth (using localStorage)
-    // Wait a tick to ensure Leaflet is loaded
-    if (typeof L !== 'undefined') {
-      initMap();
-    } else {
-      console.warn('Leaflet not available, retrying...');
-      setTimeout(() => {
-        if (typeof L !== 'undefined') {
-          initMap();
-        } else {
-          console.error('Leaflet still not available!');
-        }
-      }, 100);
-    }
-    updateStats();
-    updateUserList();
-    addActivityLog('Admin panel initialized');
   });
+  
+  // Initialize map
+  tryInitMap();
   
   // Auto refresh every 30 seconds
   setInterval(() => {

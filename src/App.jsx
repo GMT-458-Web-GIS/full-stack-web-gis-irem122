@@ -1,20 +1,54 @@
 import React, { useState, useEffect } from 'react'
 import MapView from './components/Map'
 import SuggestionForm from './components/SuggestionForm'
-import { initFirebase, signOut, getSuggestions, signInAnonymously } from './firebase'
+import { initFirebase, signOut, getSuggestions, signInAnonymously, deleteSuggestion, updateSuggestion } from './firebase'
 import { getAuth } from 'firebase/auth'
 
 initFirebase()
 
+// Country name aliases for multilingual matching
+const countryAliases = {
+  'turkey': ['turkey', 'türkiye', 'turkiye'],
+  'germany': ['germany', 'deutschland'],
+  'france': ['france', 'frankreich'],
+  'spain': ['spain', 'españa', 'espana'],
+  'italy': ['italy', 'italia'],
+  'greece': ['greece', 'ελλάδα', 'ellada'],
+  'netherlands': ['netherlands', 'nederland', 'holland'],
+  'japan': ['japan', '日本', 'nippon'],
+  'china': ['china', '中国', 'zhongguo'],
+  'south korea': ['south korea', '대한민국', 'korea'],
+  'russia': ['russia', 'россия', 'rossiya'],
+  'brazil': ['brazil', 'brasil'],
+  'mexico': ['mexico', 'méxico']
+}
+
+const matchCountry = (markerCountry, filterCountry) => {
+  if (!filterCountry) return true
+  const markerLower = markerCountry?.toLowerCase() || ''
+  const filterLower = filterCountry.toLowerCase()
+  
+  // Direct match
+  if (markerLower.includes(filterLower) || filterLower.includes(markerLower)) return true
+  
+  // Check aliases
+  const aliases = countryAliases[filterLower] || [filterLower]
+  return aliases.some(alias => markerLower.includes(alias))
+}
+
 export default function App() {
   const [showForm, setShowForm] = useState(false)
   const [filters, setFilters] = useState({ country: '', city: '', timeSlot: '', category: '' })
+  const [activeFilters, setActiveFilters] = useState({ country: '', city: '', timeSlot: '', category: '' })
   const [countries, setCountries] = useState([])
   const [cities, setCities] = useState([])
   const [userMarkers, setUserMarkers] = useState([])
   const [newMarkerData, setNewMarkerData] = useState(null)
+  const [mapCenter, setMapCenter] = useState([39.9334, 32.8597]) // Default: Ankara
+  const [mapZoom, setMapZoom] = useState(6)
+  const [editingMarker, setEditingMarker] = useState(null) // For editing markers
 
-  // Ensure user is logged in (check for real auth, not anonymous)
+  // Ensure user is logged in (email/password user)
   useEffect(() => {
     const auth = getAuth()
     
@@ -22,59 +56,177 @@ export default function App() {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (!user) {
         console.log('No user found, redirecting to login...')
-        // No user at all - redirect to login
         window.location.href = '/full-stack-web-gis-irem122/login.html'
-      } else if (user.isAnonymous) {
-        console.log('Anonymous user detected, signing in with email/password required')
-        // Anonymous user not allowed for authenticated area
-        signOut().then(() => {
-          window.location.href = '/full-stack-web-gis-irem122/login.html'
-        })
       } else {
-        console.log('Real user logged in:', user.email, user.uid)
+        // User is logged in (email/password)
+        console.log('User logged in:', user.email, user.uid)
       }
     })
     
     return () => unsubscribe()
   }, [])
 
-  // Load countries from API
+  const [loadingCountries, setLoadingCountries] = useState(true)
+  const [loadingCities, setLoadingCities] = useState(false)
+  const [countrySearch, setCountrySearch] = useState('')
+  const [citySearch, setCitySearch] = useState('')
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false)
+  const [showCityDropdown, setShowCityDropdown] = useState(false)
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
-    // Use a simple fallback list instead of API
-    const commonCountries = [
-      'Turkey', 'United States', 'United Kingdom', 'Germany', 'France', 
-      'Italy', 'Spain', 'Greece', 'Netherlands', 'Belgium', 
-      'Switzerland', 'Austria', 'Poland', 'Czech Republic', 'Hungary',
-      'Portugal', 'Sweden', 'Norway', 'Denmark', 'Finland',
-      'Russia', 'Ukraine', 'Romania', 'Bulgaria', 'Serbia',
-      'Japan', 'China', 'South Korea', 'India', 'Thailand',
-      'Australia', 'New Zealand', 'Canada', 'Mexico', 'Brazil',
-      'Argentina', 'Chile', 'Colombia', 'Peru', 'Egypt'
-    ].sort()
-    setCountries(commonCountries)
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.searchable-dropdown')) {
+        setShowCountryDropdown(false)
+        setShowCityDropdown(false)
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
   }, [])
 
-  // Load cities when country changes
+  // Load ALL countries from REST Countries API
+  useEffect(() => {
+    const fetchCountries = async () => {
+      setLoadingCountries(true)
+      try {
+        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2')
+        const data = await response.json()
+        const countryList = data.map(c => ({
+          name: c.name.common,
+          code: c.cca2
+        })).sort((a, b) => a.name.localeCompare(b.name))
+        setCountries(countryList)
+        console.log('Loaded', countryList.length, 'countries from API')
+      } catch (err) {
+        console.error('Failed to fetch countries:', err)
+        setCountries([])
+      }
+      setLoadingCountries(false)
+    }
+    fetchCountries()
+  }, [])
+
+  // Load cities when country changes - using CountryStateCity API
   useEffect(() => {
     if (!filters.country) {
       setCities([])
       return
     }
     
-    // Common cities by country (simple fallback)
-    const cityMap = {
-      'Turkey': ['Istanbul', 'Ankara', 'Izmir', 'Antalya', 'Bursa', 'Adana', 'Gaziantep', 'Konya', 'Mersin', 'Diyarbakir'],
-      'United States': ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio', 'San Diego'],
-      'United Kingdom': ['London', 'Manchester', 'Birmingham', 'Leeds', 'Glasgow', 'Liverpool', 'Newcastle', 'Edinburgh'],
-      'Germany': ['Berlin', 'Hamburg', 'Munich', 'Cologne', 'Frankfurt', 'Stuttgart', 'Dusseldorf', 'Dortmund'],
-      'France': ['Paris', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier'],
-      'Italy': ['Rome', 'Milan', 'Naples', 'Turin', 'Palermo', 'Genoa', 'Bologna', 'Florence'],
-      'Spain': ['Madrid', 'Barcelona', 'Valencia', 'Seville', 'Zaragoza', 'Malaga', 'Murcia', 'Bilbao']
+    const fetchCities = async () => {
+      setLoadingCities(true)
+      setCitySearch('')
+      try {
+        // Find country code
+        const selectedCountry = countries.find(c => c.name === filters.country)
+        if (!selectedCountry) {
+          setCities([])
+          setLoadingCities(false)
+          return
+        }
+        
+        const countryCode = selectedCountry.code
+        
+        // Use CountryStateCity API (free, no limit)
+        const response = await fetch(
+          `https://countriesnow.space/api/v0.1/countries/cities`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ country: filters.country })
+          }
+        )
+        const data = await response.json()
+        
+        if (data.data && data.data.length > 0) {
+          const cityList = data.data.sort()
+          setCities(cityList)
+          console.log('Loaded', cityList.length, 'cities for', filters.country)
+        } else {
+          console.log('No cities found, trying alternative...')
+          // Fallback: try states/regions
+          const statesResponse = await fetch(
+            `https://countriesnow.space/api/v0.1/countries/states`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ country: filters.country })
+            }
+          )
+          const statesData = await statesResponse.json()
+          if (statesData.data && statesData.data.states) {
+            const stateList = statesData.data.states.map(s => s.name).sort()
+            setCities(stateList)
+            console.log('Loaded', stateList.length, 'states for', filters.country)
+          } else {
+            setCities([])
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch cities:', err)
+        setCities([])
+      }
+      setLoadingCities(false)
     }
     
-    const cities = cityMap[filters.country] || ['City Center', 'Downtown', 'Old Town']
-    setCities(cities)
-  }, [filters.country])
+    fetchCities()
+  }, [filters.country, countries])
+
+  // Zoom to location when country or city changes
+  const zoomToLocation = async (country, city) => {
+    if (!country && !city) return
+    
+    try {
+      const query = city ? `${city}, ${country}` : country
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`
+      )
+      const data = await response.json()
+      
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0]
+        setMapCenter([parseFloat(lat), parseFloat(lon)])
+        setMapZoom(city ? 10 : 5) // City: zoom 10, Country: zoom 5
+        console.log('Zoomed to:', query, lat, lon)
+      }
+    } catch (err) {
+      console.error('Failed to geocode location:', err)
+    }
+  }
+
+  // Handle marker delete
+  const handleDeleteMarker = async (markerId) => {
+    console.log('Delete button clicked for marker:', markerId)
+    const confirmed = window.confirm('Are you sure you want to delete this marker?')
+    console.log('User confirmed:', confirmed)
+    
+    if (confirmed) {
+      try {
+        console.log('Attempting to delete marker:', markerId)
+        await deleteSuggestion(markerId)
+        console.log('Marker deleted successfully:', markerId)
+        alert('Marker deleted!')
+      } catch (err) {
+        console.error('Failed to delete marker:', err)
+        alert('Failed to delete marker: ' + err.message)
+      }
+    }
+  }
+
+  // Handle marker edit
+  const handleEditMarker = (marker) => {
+    setEditingMarker(marker)
+    setNewMarkerData({
+      lat: marker.lat,
+      lng: marker.lng,
+      country: marker.country,
+      city: marker.city,
+      district: marker.district,
+      address: marker.address
+    })
+    setShowForm(true)
+  }
 
   // Load user's markers
   useEffect(() => {
@@ -88,17 +240,23 @@ export default function App() {
     // Get location info from coordinates using reverse geocoding
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json`
+        `https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json&accept-language=en`
       )
       const data = await response.json()
       
       console.log('Location data:', data)
       
+      // For Turkey and many countries, 'state' or 'province' gives the main city/region
+      // 'city' or 'town' gives the district/neighborhood
+      const mainCity = data.address?.state || data.address?.province || data.address?.city || data.address?.town || 'Unknown'
+      const district = data.address?.city || data.address?.town || data.address?.suburb || data.address?.village || ''
+      
       const locationData = {
         lat: latlng.lat,
         lng: latlng.lng,
         country: data.address?.country || 'Unknown',
-        city: data.address?.city || data.address?.town || data.address?.village || 'Unknown',
+        city: mainCity, // Use state/province as main city (e.g., Ankara instead of Sincan)
+        district: district, // Store district separately
         address: data.display_name || ''
       }
       
@@ -112,6 +270,7 @@ export default function App() {
         lng: latlng.lng,
         country: 'Unknown',
         city: 'Unknown',
+        district: '',
         address: `${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`
       })
       setShowForm(true)
@@ -195,47 +354,148 @@ export default function App() {
         }}>
           <h4 style={{margin:'0 0 16px 0', color:'#FF4A1C', fontSize:'18px', fontWeight:600, textAlign:'center'}}>Filters</h4>
           <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
-            <label style={{display:'flex', flexDirection:'column', gap:'6px', fontSize:'13px', fontWeight:500, color:'#565656'}}>
+            {/* Searchable Country Dropdown */}
+            <label className="searchable-dropdown" style={{display:'flex', flexDirection:'column', gap:'6px', fontSize:'13px', fontWeight:500, color:'#565656', position:'relative'}}>
               Country
-              <select 
-                value={filters.country} 
-                onChange={e=>setFilters({...filters, country:e.target.value, city:''})}
-                style={{
-                  padding:'10px 14px',
-                  border:'1px solid rgba(86, 86, 86, 0.2)',
-                  borderRadius:'8px',
-                  fontSize:'14px',
-                  fontFamily:"'Google Sans', sans-serif",
-                  background:'white',
-                  cursor:'pointer',
-                  transition:'all 0.3s ease'
-                }}
-              >
-                <option value="">All Countries</option>
-                {countries.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <div style={{position:'relative'}}>
+                <input 
+                  type="text"
+                  placeholder={loadingCountries ? 'Loading countries...' : 'Search & select country...'}
+                  value={countrySearch || filters.country}
+                  onChange={e => {
+                    setCountrySearch(e.target.value)
+                    setShowCountryDropdown(true)
+                    if (!e.target.value) {
+                      setFilters({...filters, country:'', city:''})
+                    }
+                  }}
+                  onFocus={() => setShowCountryDropdown(true)}
+                  disabled={loadingCountries}
+                  style={{
+                    padding:'10px 14px',
+                    border:'1px solid rgba(86, 86, 86, 0.2)',
+                    borderRadius:'8px',
+                    fontSize:'14px',
+                    fontFamily:"'Google Sans', sans-serif",
+                    background:'white',
+                    width:'100%',
+                    boxSizing:'border-box'
+                  }}
+                />
+                {showCountryDropdown && !loadingCountries && (
+                  <div style={{
+                    position:'absolute',
+                    top:'100%',
+                    left:0,
+                    right:0,
+                    maxHeight:'200px',
+                    overflowY:'auto',
+                    background:'white',
+                    border:'1px solid rgba(86, 86, 86, 0.2)',
+                    borderRadius:'8px',
+                    zIndex:20000,
+                    boxShadow:'0 4px 12px rgba(0,0,0,0.15)'
+                  }}>
+                    {countries
+                      .filter(c => c.name.toLowerCase().includes((countrySearch || '').toLowerCase()))
+                      .map(c => (
+                        <div 
+                          key={c.code}
+                          onClick={() => {
+                            setFilters({...filters, country: c.name, city:''})
+                            setCountrySearch('')
+                            setShowCountryDropdown(false)
+                            zoomToLocation(c.name, null) // Zoom to country
+                          }}
+                          style={{
+                            padding:'10px 14px',
+                            cursor:'pointer',
+                            borderBottom:'1px solid rgba(86,86,86,0.1)',
+                            fontSize:'14px',
+                            background: filters.country === c.name ? '#B2FFA9' : 'white'
+                          }}
+                          onMouseEnter={e => e.target.style.background = '#f0f0f0'}
+                          onMouseLeave={e => e.target.style.background = filters.country === c.name ? '#B2FFA9' : 'white'}
+                        >
+                          {c.name}
+                        </div>
+                      ))
+                    }
+                  </div>
+                )}
+              </div>
             </label>
-            <label style={{display:'flex', flexDirection:'column', gap:'6px', fontSize:'13px', fontWeight:500, color:'#565656'}}>
+            
+            {/* Searchable City Dropdown */}
+            <label className="searchable-dropdown" style={{display:'flex', flexDirection:'column', gap:'6px', fontSize:'13px', fontWeight:500, color:'#565656', position:'relative'}}>
               City
-              <select 
-                value={filters.city} 
-                onChange={e=>setFilters({...filters, city:e.target.value})}
-                disabled={!filters.country}
-                style={{
-                  padding:'10px 14px',
-                  border:'1px solid rgba(86, 86, 86, 0.2)',
-                  borderRadius:'8px',
-                  fontSize:'14px',
-                  fontFamily:"'Google Sans', sans-serif",
-                  background:'white',
-                  cursor: filters.country ? 'pointer' : 'not-allowed',
-                  opacity: filters.country ? 1 : 0.5,
-                  transition:'all 0.3s ease'
-                }}
-              >
-                <option value="">All Cities</option>
-                {cities.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <div style={{position:'relative'}}>
+                <input 
+                  type="text"
+                  placeholder={!filters.country ? 'Select country first' : loadingCities ? 'Loading cities...' : 'Search & select city...'}
+                  value={citySearch || filters.city}
+                  onChange={e => {
+                    setCitySearch(e.target.value)
+                    setShowCityDropdown(true)
+                    if (!e.target.value) {
+                      setFilters({...filters, city:''})
+                    }
+                  }}
+                  onFocus={() => setShowCityDropdown(true)}
+                  disabled={!filters.country || loadingCities}
+                  style={{
+                    padding:'10px 14px',
+                    border:'1px solid rgba(86, 86, 86, 0.2)',
+                    borderRadius:'8px',
+                    fontSize:'14px',
+                    fontFamily:"'Google Sans', sans-serif",
+                    background: !filters.country ? '#f5f5f5' : 'white',
+                    width:'100%',
+                    boxSizing:'border-box'
+                  }}
+                />
+                {showCityDropdown && filters.country && !loadingCities && cities.length > 0 && (
+                  <div style={{
+                    position:'absolute',
+                    top:'100%',
+                    left:0,
+                    right:0,
+                    maxHeight:'200px',
+                    overflowY:'auto',
+                    background:'white',
+                    border:'1px solid rgba(86, 86, 86, 0.2)',
+                    borderRadius:'8px',
+                    zIndex:20000,
+                    boxShadow:'0 4px 12px rgba(0,0,0,0.15)'
+                  }}>
+                    {cities
+                      .filter(city => city.toLowerCase().includes((citySearch || '').toLowerCase()))
+                      .map(city => (
+                        <div 
+                          key={city}
+                          onClick={() => {
+                            setFilters({...filters, city: city})
+                            setCitySearch('')
+                            setShowCityDropdown(false)
+                            zoomToLocation(filters.country, city) // Zoom to city
+                          }}
+                          style={{
+                            padding:'10px 14px',
+                            cursor:'pointer',
+                            borderBottom:'1px solid rgba(86,86,86,0.1)',
+                            fontSize:'14px',
+                            background: filters.city === city ? '#B2FFA9' : 'white'
+                          }}
+                          onMouseEnter={e => e.target.style.background = '#f0f0f0'}
+                          onMouseLeave={e => e.target.style.background = filters.city === city ? '#B2FFA9' : 'white'}
+                        >
+                          {city}
+                        </div>
+                      ))
+                    }
+                  </div>
+                )}
+              </div>
             </label>
             <label style={{display:'flex', flexDirection:'column', gap:'6px', fontSize:'13px', fontWeight:500, color:'#565656'}}>
               Time
@@ -280,12 +540,59 @@ export default function App() {
                 <option value="event">Event</option>
               </select>
             </label>
+            
+            {/* Search and Clear Buttons */}
+            <div style={{display:'flex', gap:'8px', marginTop:'8px'}}>
+              <button
+                onClick={() => setActiveFilters({...filters})}
+                style={{
+                  flex:1,
+                  padding:'12px 16px',
+                  background:'#B2FFA9',
+                  color:'#565656',
+                  border:'none',
+                  borderRadius:'25px',
+                  cursor:'pointer',
+                  fontFamily:"'Google Sans', sans-serif",
+                  fontWeight:600,
+                  fontSize:'14px',
+                  transition:'all 0.3s ease'
+                }}
+              >
+                🔍 Search
+              </button>
+              <button
+                onClick={() => {
+                  setFilters({ country: '', city: '', timeSlot: '', category: '' })
+                  setActiveFilters({ country: '', city: '', timeSlot: '', category: '' })
+                }}
+                style={{
+                  padding:'12px 16px',
+                  background:'#FF4A1C',
+                  color:'white',
+                  border:'none',
+                  borderRadius:'25px',
+                  cursor:'pointer',
+                  fontFamily:"'Google Sans', sans-serif",
+                  fontWeight:600,
+                  fontSize:'14px',
+                  transition:'all 0.3s ease'
+                }}
+              >
+                ✕ Clear
+              </button>
+            </div>
           </div>
           
           {/* User Markers List */}
           <div style={{marginTop:'20px', paddingTop:'20px', borderTop:'1px solid rgba(86, 86, 86, 0.2)'}}>
             <h4 style={{margin:'0 0 12px 0', color:'#FF4A1C', fontSize:'16px', fontWeight:600}}>
-              My Markers ({userMarkers.length})
+              Markers ({userMarkers.filter(m => 
+                matchCountry(m.country, activeFilters.country) &&
+                (!activeFilters.city || m.city?.toLowerCase().includes(activeFilters.city.toLowerCase())) &&
+                (!activeFilters.timeSlot || m.timeSlot === activeFilters.timeSlot) &&
+                (!activeFilters.category || m.category === activeFilters.category)
+              ).length})
             </h4>
             <div style={{
               maxHeight:'300px', 
@@ -294,12 +601,22 @@ export default function App() {
               flexDirection:'column',
               gap:'8px'
             }}>
-              {userMarkers.length === 0 ? (
+              {userMarkers.filter(m => 
+                matchCountry(m.country, activeFilters.country) &&
+                (!activeFilters.city || m.city?.toLowerCase().includes(activeFilters.city.toLowerCase())) &&
+                (!activeFilters.timeSlot || m.timeSlot === activeFilters.timeSlot) &&
+                (!activeFilters.category || m.category === activeFilters.category)
+              ).length === 0 ? (
                 <p style={{fontSize:'13px', color:'#999', textAlign:'center', margin:'20px 0'}}>
-                  No markers yet. Click "Add New Suggestion" to create one!
+                  No markers found. Try different filters or add a new one!
                 </p>
               ) : (
-                userMarkers.map(marker => (
+                userMarkers.filter(m => 
+                  matchCountry(m.country, activeFilters.country) &&
+                  (!activeFilters.city || m.city?.toLowerCase().includes(activeFilters.city.toLowerCase())) &&
+                  (!activeFilters.timeSlot || m.timeSlot === activeFilters.timeSlot) &&
+                  (!activeFilters.category || m.category === activeFilters.category)
+                ).map(marker => (
                   <div 
                     key={marker.id}
                     style={{
@@ -308,20 +625,68 @@ export default function App() {
                       border:'1px solid rgba(178, 255, 169, 0.3)',
                       borderRadius:'8px',
                       fontSize:'12px',
-                      cursor:'pointer',
                       transition:'all 0.3s ease'
                     }}
                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(178, 255, 169, 0.2)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'rgba(178, 255, 169, 0.1)'}
                   >
-                    <div style={{fontWeight:600, color:'#FF4A1C', marginBottom:'4px'}}>
-                      {marker.title || 'Untitled'}
-                    </div>
-                    <div style={{color:'#565656', fontSize:'11px'}}>
-                      📍 {marker.city}, {marker.country}
-                    </div>
-                    <div style={{color:'#999', fontSize:'11px', marginTop:'2px'}}>
-                      🕒 {marker.timeSlot} • {marker.category}
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+                      <div style={{flex:1}}>
+                        <div style={{fontWeight:600, color:'#FF4A1C', marginBottom:'4px'}}>
+                          {marker.title || 'Untitled'}
+                        </div>
+                        <div style={{color:'#565656', fontSize:'11px'}}>
+                          📍 {marker.city}{marker.district ? ` (${marker.district})` : ''}, {marker.country}
+                        </div>
+                        <div style={{color:'#999', fontSize:'11px', marginTop:'2px'}}>
+                          🕒 {marker.timeSlot} • {marker.category}
+                        </div>
+                      </div>
+                      <div style={{display:'flex', gap:'4px', marginLeft:'8px'}}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            handleEditMarker(marker)
+                          }}
+                          style={{
+                            padding:'4px 8px',
+                            background:'#B2FFA9',
+                            color:'#565656',
+                            border:'none',
+                            borderRadius:'4px',
+                            cursor:'pointer',
+                            fontSize:'10px',
+                            fontWeight:600
+                          }}
+                          title="Edit marker"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            console.log('Delete clicked!', marker.id)
+                            handleDeleteMarker(marker.id)
+                          }}
+                          style={{
+                            padding:'4px 8px',
+                            background:'#FF4A1C',
+                            color:'white',
+                            border:'none',
+                            borderRadius:'4px',
+                            cursor:'pointer',
+                            fontSize:'10px',
+                            fontWeight:600
+                          }}
+                          title="Delete marker"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -331,7 +696,12 @@ export default function App() {
         </aside>
 
         <main style={{flex:1}}>
-          <MapView filters={filters} onAddMarker={handleAddMarkerClick} />
+          <MapView 
+            filters={activeFilters} 
+            onAddMarker={handleAddMarkerClick}
+            center={mapCenter}
+            zoom={mapZoom}
+          />
         </main>
       </div>
 
@@ -339,8 +709,10 @@ export default function App() {
         onClose={() => {
           setShowForm(false)
           setNewMarkerData(null)
+          setEditingMarker(null)
         }} 
         initialData={newMarkerData}
+        editingMarker={editingMarker}
       />}
     </div>
   )

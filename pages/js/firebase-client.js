@@ -34,6 +34,7 @@ export async function createSuggestion(payload) {
       timeSlot: payload.timeSlot || '',
       category: payload.category || '',
       createdBy: auth.currentUser.uid,
+      creatorEmail: auth.currentUser.email || 'Anonymous',
       createdAt: timestamp,
       updatedAt: timestamp,
       visibility: 'public',

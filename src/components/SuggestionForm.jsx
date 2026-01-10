@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { createSuggestion } from '../firebase'
+import { createSuggestion, updateSuggestion } from '../firebase'
 import { getAuth, signInAnonymously } from 'firebase/auth'
 
-export default function SuggestionForm({ onClose, initialData }) {
+export default function SuggestionForm({ onClose, initialData, editingMarker }) {
   const [form, setForm] = useState({ 
     title: '', 
     description: '', 
     country: '', 
     city: '', 
+    district: '',
     timeSlot: 'morning', 
     category: 'food', 
     lat: 39.925533, 
@@ -15,18 +16,32 @@ export default function SuggestionForm({ onClose, initialData }) {
   })
   const [loading, setLoading] = useState(false)
 
-  // Load initial data from map click
+  // Load initial data from map click or editing marker
   useEffect(() => {
-    if (initialData) {
+    if (editingMarker) {
+      // Editing existing marker
+      setForm({
+        title: editingMarker.title || '',
+        description: editingMarker.description || '',
+        country: editingMarker.country || '',
+        city: editingMarker.city || '',
+        district: editingMarker.district || '',
+        timeSlot: editingMarker.timeSlot || 'morning',
+        category: editingMarker.category || 'food',
+        lat: editingMarker.lat,
+        lng: editingMarker.lng
+      })
+    } else if (initialData) {
       setForm(prev => ({
         ...prev,
         country: initialData.country,
         city: initialData.city,
+        district: initialData.district || '',
         lat: initialData.lat,
         lng: initialData.lng
       }))
     }
-  }, [initialData])
+  }, [initialData, editingMarker])
 
   const submit = async (e) => {
     e.preventDefault()
@@ -39,7 +54,7 @@ export default function SuggestionForm({ onClose, initialData }) {
       const auth = getAuth()
       console.log('Current user:', auth.currentUser)
       
-      // Check if user is logged in and NOT anonymous
+      // Check if user is logged in
       if (!auth.currentUser) {
         console.error('No user logged in!')
         alert('You must be logged in to save markers. Please log in first.')
@@ -47,23 +62,25 @@ export default function SuggestionForm({ onClose, initialData }) {
         return
       }
       
-      if (auth.currentUser.isAnonymous) {
-        console.error('Anonymous user cannot save markers!')
-        alert('Anonymous users cannot save markers. Please create an account or log in.')
-        setLoading(false)
-        return
-      }
-      
       console.log('User is authenticated:', auth.currentUser.email, 'UID:', auth.currentUser.uid)
       
-      console.log('Creating suggestion in Firebase...')
-      const result = await createSuggestion(form)
-      console.log('Suggestion created successfully! ID:', result)
+      if (editingMarker) {
+        // Update existing marker
+        console.log('Updating suggestion in Firebase...')
+        await updateSuggestion(editingMarker.id, form)
+        console.log('Suggestion updated successfully!')
+        alert('Marker updated successfully! ✓')
+      } else {
+        // Create new marker
+        console.log('Creating suggestion in Firebase...')
+        const result = await createSuggestion(form)
+        console.log('Suggestion created successfully! ID:', result)
+        alert('Marker saved successfully! ✓')
+      }
       
-      alert('Marker saved successfully! ✓')
       onClose()
     } catch (err) {
-      console.error('Error creating suggestion:', err)
+      console.error('Error saving suggestion:', err)
       console.error('Error details:', {
         code: err.code,
         message: err.message,
@@ -95,7 +112,7 @@ export default function SuggestionForm({ onClose, initialData }) {
         fontFamily:"'Google Sans', sans-serif"
       }}>
         <h3 style={{margin:'0 0 20px 0', color:'#FF4A1C', fontSize:'24px', fontWeight:600}}>
-          Add New Marker
+          {editingMarker ? 'Edit Marker' : 'Add New Marker'}
         </h3>
         
         {/* Location Info (Read-only) */}
@@ -109,7 +126,7 @@ export default function SuggestionForm({ onClose, initialData }) {
         }}>
           <div style={{fontWeight:600, color:'#565656', marginBottom:'6px'}}>📍 Location</div>
           <div style={{color:'#666'}}>
-            <strong>{form.city}</strong>, {form.country}
+            <strong>{form.city}</strong>{form.district && form.district !== form.city ? ` (${form.district})` : ''}, {form.country}
           </div>
           <div style={{color:'#999', fontSize:'11px', marginTop:'4px'}}>
             Coordinates: {form.lat.toFixed(4)}, {form.lng.toFixed(4)}

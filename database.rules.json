@@ -2,12 +2,12 @@
   "rules": {
     "suggestions": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null"
     },
     "users": {
       ".read": true,
       "$uid": {
-        ".write": true
+        ".write": "auth != null && auth.uid === $uid"
       }
     }
   }
