@@ -16,17 +16,7 @@
     <div id="root"></div>
     <!-- Map scripts -->
     <script type="module">
-      import('./js/map.js');
-      import('./js/guest.js');
-      
-      // React app'i sadece giriş yapmış kullanıcılar için yükle
-      const urlParams = new URLSearchParams(window.location.search);
-      const isGuest = urlParams.get('guest');
-      
-      if (!isGuest) {
-        // Giriş yapmış kullanıcı - React app'i yükle
-        import('../src/main.jsx');
-      }
+      import('./js/map-init.js');
     </script>
   </body>
 </html>
