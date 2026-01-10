@@ -5,23 +5,18 @@ service cloud.firestore {
     match /suggestions/{docId} {
       allow read: if true; // herkese açık okuma
 
-      // yaratma için kullanıcı auth olmalı ve users koleksiyonundaki role 'contributor' veya admin olmalıdır
-      allow create: if request.auth != null &&
-        (
-          request.auth.token.admin == true
-          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'contributor'
-        );
+      // Authenticated users (including anonymous) can create suggestions
+      allow create: if request.auth != null;
 
       // update/delete yalnızca belge sahibi veya admin olabilir
       allow update, delete: if request.auth != null &&
         (
           request.auth.uid == resource.data.createdBy
           || request.auth.token.admin == true
-          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
         );
     }
 
-    // users koleksiyonu: kullanıcılar kendi profillerini okuyup yazabilir; admin role güncellemesi için ekstra kısıtlama
+    // users koleksiyonu
     match /users/{userId} {
       allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
       allow create: if request.auth != null;

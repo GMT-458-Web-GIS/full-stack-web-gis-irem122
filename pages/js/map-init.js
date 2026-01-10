@@ -1,16 +1,30 @@
 // Map initialization - main entry point for map.html
-import('./map.js');
-import('./guest.js');
+
+// Check if logout is in progress - prevent guest mode during logout
+const logoutInProgress = sessionStorage.getItem('logout_in_progress');
+if (logoutInProgress) {
+  // Don't load anything, logout redirect is in progress
+  console.log('Logout redirect in progress, skipping all initialization');
+  // Clear the flag and force redirect if somehow we're still here
+  sessionStorage.removeItem('logout_in_progress');
+  window.location.replace('/full-stack-web-gis-irem122/login.html');
+  throw new Error('Redirecting to login');
+}
 
 // React app'i sadece giriş yapmış kullanıcılar için yükle
 const urlParams = new URLSearchParams(window.location.search);
 const isGuest = urlParams.get('guest');
 
 if (!isGuest) {
-  // Giriş yapmış kullanıcı - React app'i yükle
+  // Giriş yapmış kullanıcı - React app'i yükle (map.js yükleme!)
+  console.log('Loading React app for authenticated user');
   import('../../src/main.jsx');
 } else {
-  // Guest mode - add logout button
+  // Guest mode - load map.js and guest.js
+  console.log('Loading guest mode');
+  import('./map.js');
+  import('./guest.js');
+  // Guest mode - add back to login button
   const header = document.createElement('div');
   header.style.cssText = `
     position: fixed;
@@ -34,7 +48,7 @@ if (!isGuest) {
   title.style.cssText = 'margin: 0; color: #B2FFA9;';
   
   const backBtn = document.createElement('button');
-  backBtn.textContent = 'Back to Home';
+  backBtn.textContent = 'Login';
   backBtn.style.cssText = `
     padding: 10px 20px;
     background: #FF4A1C;
@@ -47,8 +61,8 @@ if (!isGuest) {
     font-size: 14px;
   `;
   backBtn.onclick = () => {
-    localStorage.removeItem('guest');
-    window.location.href = '/full-stack-web-gis-irem122/index.html';
+    // Redirect to login page
+    window.location.href = '/full-stack-web-gis-irem122/login.html';
   };
   
   header.appendChild(title);

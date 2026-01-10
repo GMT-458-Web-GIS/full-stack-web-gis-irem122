@@ -11,9 +11,10 @@
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
+    <!-- React root comes first so it's on top -->
+    <div id="root"></div>
     <!-- Tam ekran harita konteyneri -->
     <div id="map"></div>
-    <div id="root"></div>
     <!-- Map scripts -->
     <script type="module">
       import('./pages/js/map-init.js');

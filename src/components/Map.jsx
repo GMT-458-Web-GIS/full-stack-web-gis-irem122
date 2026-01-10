@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { getSuggestions } from '../firebase'
@@ -11,7 +11,16 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
 })
 
-export default function MapView({ filters }) {
+function MapClickHandler({ onMapClick }) {
+  useMapEvents({
+    click(e) {
+      onMapClick(e.latlng)
+    }
+  })
+  return null
+}
+
+export default function MapView({ filters, onAddMarker }) {
   const [suggestions, setSuggestions] = useState([])
 
   useEffect(() => {
@@ -19,9 +28,16 @@ export default function MapView({ filters }) {
     return () => { if (typeof unsub === 'function') unsub() }
   }, [filters])
 
+  const handleMapClick = (latlng) => {
+    if (onAddMarker) {
+      onAddMarker(latlng)
+    }
+  }
+
   return (
     <MapContainer center={[39.925533,32.866287]} zoom={6} style={{height:'100%'}}>
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <MapClickHandler onMapClick={handleMapClick} />
       {suggestions.map(s => (
         <Marker key={s.id} position={[s.lat, s.lng]}>
           <Popup>
