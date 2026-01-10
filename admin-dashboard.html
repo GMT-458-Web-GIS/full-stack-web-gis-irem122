@@ -272,7 +272,7 @@
       </div>
       <div class="admin-controls">
         <button class="admin-btn" onclick="refreshData()">Refresh</button>
-        <button class="admin-btn" onclick="window.location.href='./index.html'">Back to Home</button>
+        <button class="admin-btn" onclick="window.location.href='/full-stack-web-gis-irem122/login.html'">Back to Home</button>
         <button class="admin-btn" onclick="logout()">Logout</button>
       </div>
     </header>
@@ -338,7 +338,7 @@
       if (adminSession !== 'true' || !loginTime || (now - parseInt(loginTime)) > sessionDuration) {
         localStorage.removeItem('adminSession');
         localStorage.removeItem('adminLoginTime');
-        window.location.href = './admin-login.html';
+        window.location.href = '/full-stack-web-gis-irem122/admin-login.html';
       }
 
       // Global variables - exposed to window for module access
@@ -353,7 +353,7 @@
       function logout() {
         localStorage.removeItem('adminSession');
         localStorage.removeItem('adminLoginTime');
-        window.location.href = './admin-login.html';
+        window.location.href = '/full-stack-web-gis-irem122/login.html';
       }
 
       function refreshData() {
