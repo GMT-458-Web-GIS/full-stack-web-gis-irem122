@@ -914,15 +914,8 @@ function init() {
     Object.values(markers).forEach(m => map.removeLayer(m))
     markers = {}
     list.forEach(s => {
-      // Create marker with bubblingMouseEvents: false to prevent click from bubbling to map
-      const m = L.marker([s.lat, s.lng], { bubblingMouseEvents: false }).addTo(map)
-      
-      // When marker is clicked, set flag to prevent map click handler
-      m.on('click', () => {
-        markerClicked = true
-        // Reset after a short delay
-        setTimeout(() => { markerClicked = false }, 500)
-      })
+      // Create marker - don't use click events at all
+      const m = L.marker([s.lat, s.lng]).addTo(map)
       
       // Create simple HTML popup with onclick attribute
       const popupContent = `
@@ -935,6 +928,16 @@ function init() {
         </div>
       `
       m.bindPopup(popupContent)
+      
+      // OVERRIDE default click behavior - manually open popup and block map click
+      m.off('click') // Remove default click handler
+      m.on('click', (e) => {
+        L.DomEvent.stop(e) // Stop event completely
+        markerClicked = true
+        m.openPopup()
+        setTimeout(() => { markerClicked = false }, 500)
+      })
+      
       markers[s.id] = m
     })
   }
