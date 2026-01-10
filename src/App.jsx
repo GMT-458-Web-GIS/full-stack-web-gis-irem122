@@ -51,17 +51,38 @@ export default function App() {
   const [mapZoom, setMapZoom] = useState(6)
   const [editingMarker, setEditingMarker] = useState(null) // For editing markers
   const [authLoading, setAuthLoading] = useState(true) // Auth loading state
+  const [authChecked, setAuthChecked] = useState(false) // Has auth been checked at least once?
 
   // Ensure user is logged in (email/password user)
   useEffect(() => {
     const auth = getAuth()
     
+    console.log('Setting up auth listener...')
+    
     // Wait for auth state to be ready
     const unsubscribe = auth.onAuthStateChanged((user) => {
+      console.log('Auth state changed:', user ? user.email : 'no user')
+      
       setAuthLoading(false) // Auth state is now ready
+      setAuthChecked(true) // Mark that we've checked auth
+      
       if (!user) {
-        console.log('No user found, redirecting to login...')
-        window.location.href = '/full-stack-web-gis-irem122/login.html'
+        // Only redirect if we've actually checked and there's no user
+        // Give Firebase a moment to restore the session
+        if (!authChecked) {
+          console.log('First check - no user, waiting...')
+          // Wait a bit more for Firebase to restore session
+          setTimeout(() => {
+            const currentUser = auth.currentUser
+            if (!currentUser) {
+              console.log('No user after wait, redirecting to login...')
+              window.location.href = '/full-stack-web-gis-irem122/login.html'
+            }
+          }, 1500)
+        } else {
+          console.log('No user found, redirecting to login...')
+          window.location.href = '/full-stack-web-gis-irem122/login.html'
+        }
       } else {
         // User is logged in (email/password)
         console.log('User logged in:', user.email, user.uid)
