@@ -23,11 +23,6 @@ export default defineConfig({
         admin: resolve(__dirname, 'admin.html'),
         adminLogin: resolve(__dirname, 'admin-login.html'),
         adminDashboard: resolve(__dirname, 'admin-dashboard.html')
-      },
-      output: {
-        entryFileNames: '[name].js',
-        chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash][extname]'
       }
     }
   }
