@@ -1,22 +1,26 @@
-import { initializeApp } from 'firebase/app'
+import { initializeApp, getApps } from 'firebase/app'
 import { getAuth, signInAnonymously as _signInAnon, signOut as _signOut } from 'firebase/auth'
 import { getDatabase, ref, onValue, push, set, remove, update } from 'firebase/database'
 
 let app, auth, db
 
 export function initFirebase() {
-  if (app) return
-  const firebaseConfig = {
-    apiKey: "AIzaSyANVHlJiXqVubgu-DZU-v9rVWvKtF-BdXU",
-    authDomain: "webgis-5c57a.firebaseapp.com",
-    projectId: "webgis-5c57a",
-    databaseURL: "https://webgis-5c57a-default-rtdb.firebaseio.com",
-    storageBucket: "webgis-5c57a.firebasestorage.app",
-    messagingSenderId: "756947379094",
-    appId: "1:756947379094:web:7e4a812bdfa5e84da8b3b7",
-    measurementId: "G-PHTSHD420R"
+  // Check if Firebase is already initialized (e.g., by firebase-client.js)
+  if (getApps().length > 0) {
+    app = getApps()[0]
+  } else {
+    const firebaseConfig = {
+      apiKey: "AIzaSyANVHlJiXqVubgu-DZU-v9rVWvKtF-BdXU",
+      authDomain: "webgis-5c57a.firebaseapp.com",
+      projectId: "webgis-5c57a",
+      databaseURL: "https://webgis-5c57a-default-rtdb.firebaseio.com",
+      storageBucket: "webgis-5c57a.firebasestorage.app",
+      messagingSenderId: "756947379094",
+      appId: "1:756947379094:web:7e4a812bdfa5e84da8b3b7",
+      measurementId: "G-PHTSHD420R"
+    }
+    app = initializeApp(firebaseConfig)
   }
-  app = initializeApp(firebaseConfig)
   auth = getAuth(app)
   db = getDatabase(app)
 }

@@ -5,6 +5,8 @@ import { initFirebase, signOut, getSuggestions, signInAnonymously, deleteSuggest
 import { getAuth } from 'firebase/auth'
 import { useTranslation } from './translations'
 
+// Initialize Firebase before anything else
+// If already initialized elsewhere (e.g., auth.js), this will use the same singleton instance
 initFirebase()
 
 // Country name aliases for multilingual matching

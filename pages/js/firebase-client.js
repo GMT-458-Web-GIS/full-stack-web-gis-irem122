@@ -1,14 +1,23 @@
 import { firebaseConfig } from './firebase-config.js'
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js'
-import { getAuth } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js'
+import { 
+  getAuth, 
+  setPersistence, 
+  browserLocalPersistence 
+} from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js'
 import {
   getDatabase, ref, set, onValue, update, push, get, child
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js'
 
-// Initialize app only once
+// Initialize app only once - use global singleton if available
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig)
 const auth = getAuth(app)
 const db = getDatabase(app)
+
+// Explicitly set persistence to LOCAL (most reliable for this project)
+setPersistence(auth, browserLocalPersistence).catch(err => {
+  console.warn('Failed to set persistence:', err)
+})
 
 export { auth, db }
 
