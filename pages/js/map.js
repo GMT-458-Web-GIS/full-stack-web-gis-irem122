@@ -885,56 +885,44 @@ function init() {
   // Flag to prevent map click during report
   let reportInProgress = false
   
-  // Flag to track if marker was clicked
-  let markerClicked = false
-  
-  // Global function to handle report
-  window.handleReport = async function(suggestionId) {
-    // Close any open add-event panel
-    const existingPanel = document.getElementById('add-event-panel')
-    if (existingPanel) existingPanel.remove()
-    
-    if (!auth.currentUser) {
-      if (confirm('You must sign in to report. Go to login page?')) {
-        window.location.href = './auth.html'
-      }
-      return
-    }
-    try {
-      await flagSuggestion(suggestionId, 'Inappropriate content')
-      alert('Report submitted.')
-    } catch (err) {
-      console.error(err)
-      alert('Failed to submit report.')
-    }
-  }
-  
   function renderSuggestions(list) {
     // clear existing markers
     Object.values(markers).forEach(m => map.removeLayer(m))
     markers = {}
     list.forEach(s => {
-      // Create marker
-      const m = L.marker([s.lat, s.lng]).addTo(map)
+      // Create marker with bubblingMouseEvents: false to prevent click from bubbling to map
+      const m = L.marker([s.lat, s.lng], { bubblingMouseEvents: false }).addTo(map)
       
-      // Create simple HTML popup with onclick attribute
-      const popupContent = `
-        <div>
-          <strong>${escapeHtml(s.title)}</strong><br/>
-          <em>${escapeHtml(s.city||'')}, ${escapeHtml(s.country||'')}</em>
-          <div style="font-size:12px;margin-top:6px">${escapeHtml(s.timeSlot||'')} / ${escapeHtml(s.category||'')}</div>
-          <hr style="margin:8px 0"/>
-          <button onclick="event.stopPropagation(); window.handleReport('${s.id}')" style="margin-top:4px;cursor:pointer;">Report</button>
-        </div>
-      `
-      m.bindPopup(popupContent)
-      
-      // Custom click handler for marker
-      m.on('click', (e) => {
-        L.DomEvent.stopPropagation(e)
-        m.openPopup()
+      const popup = document.createElement('div')
+      popup.innerHTML = `<strong>${escapeHtml(s.title)}</strong><br/><em>${escapeHtml(s.city||'')}, ${escapeHtml(s.country||'')}</em>
+        <div style="font-size:12px;margin-top:6px">${escapeHtml(s.timeSlot||'')} / ${escapeHtml(s.category||'')}</div>`
+      const flagBtn = document.createElement('button')
+      flagBtn.textContent = 'Report'
+      flagBtn.style.marginTop = '8px'
+      flagBtn.addEventListener('click', async (e) => {
+        e.stopPropagation()
+        e.preventDefault()
+        reportInProgress = true
+        
+        if (!auth.currentUser) {
+          if (confirm('You must sign in to report. Go to login page?')) {
+            window.location.href = './auth.html'
+          }
+          reportInProgress = false
+          return
+        }
+        try {
+          await flagSuggestion(s.id, 'Inappropriate content')
+          alert('Report submitted.')
+        } catch (err) {
+          console.error(err)
+          alert('Failed to submit report.')
+        }
+        reportInProgress = false
       })
-      
+      popup.appendChild(document.createElement('hr'))
+      popup.appendChild(flagBtn)
+      m.bindPopup(popup)
       markers[s.id] = m
     })
   }
@@ -1047,33 +1035,14 @@ function init() {
 
     // map click handling for addMode
     let popupOpen = false
-    let mapClickHandlerActive = true
-    
-    map.on('popupopen', () => { 
-      popupOpen = true
-      // DISABLE map click handler when popup opens
-      mapClickHandlerActive = false
-    })
-    map.on('popupclose', () => { 
-      popupOpen = false
-      // RE-ENABLE map click handler when popup closes
-      mapClickHandlerActive = true
-    })
+    map.on('popupopen', () => { popupOpen = true })
+    map.on('popupclose', () => { popupOpen = false })
     
     map.on('click', async (e) => {
-      // FIRST CHECK: if map click handler is disabled, exit immediately
-      if (!mapClickHandlerActive) return
-      
       if (!addMode || !cachedUser) return
-      
-      // Don't trigger if report button was clicked
-      if (window._reportClicked) return
       
       // Don't trigger if report is in progress
       if (reportInProgress) return
-      
-      // Don't trigger if marker was clicked
-      if (markerClicked) return
       
       // Don't trigger if a popup is open
       if (popupOpen) return
@@ -1081,7 +1050,7 @@ function init() {
       // Don't trigger if clicking on a popup or marker
       if (e.originalEvent && e.originalEvent.target) {
         const target = e.originalEvent.target
-        if (target.closest('.leaflet-popup') || target.closest('.leaflet-marker-icon') || target.closest('button')) {
+        if (target.closest('.leaflet-popup') || target.closest('.leaflet-marker-icon')) {
           return
         }
       }

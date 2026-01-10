@@ -50,6 +50,7 @@ export default function App() {
   const [mapCenter, setMapCenter] = useState([39.9334, 32.8597]) // Default: Ankara
   const [mapZoom, setMapZoom] = useState(6)
   const [editingMarker, setEditingMarker] = useState(null) // For editing markers
+  const [authLoading, setAuthLoading] = useState(true) // Auth loading state
 
   // Ensure user is logged in (email/password user)
   useEffect(() => {
@@ -57,6 +58,7 @@ export default function App() {
     
     // Wait for auth state to be ready
     const unsubscribe = auth.onAuthStateChanged((user) => {
+      setAuthLoading(false) // Auth state is now ready
       if (!user) {
         console.log('No user found, redirecting to login...')
         window.location.href = '/full-stack-web-gis-irem122/login.html'
@@ -292,6 +294,36 @@ export default function App() {
   // useEffect for auth state tracking if needed later
 
   const { t } = useTranslation()
+
+  // Show loading screen while checking auth state
+  if (authLoading) {
+    return (
+      <div style={{
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#1a1a1a',
+        color: '#B2FFA9',
+        fontFamily: "'Google Sans', sans-serif",
+        fontSize: '18px'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ 
+            width: '40px', 
+            height: '40px', 
+            border: '3px solid #B2FFA9', 
+            borderTopColor: 'transparent', 
+            borderRadius: '50%', 
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }} />
+          <p>Loading...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{height:'100vh', display:'flex', flexDirection:'column', position:'relative', zIndex:1000, fontFamily:"'Google Sans', sans-serif"}}>
