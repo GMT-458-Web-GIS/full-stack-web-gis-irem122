@@ -894,7 +894,9 @@ function init() {
       const flagBtn = document.createElement('button')
       flagBtn.textContent = 'Report'
       flagBtn.style.marginTop = '8px'
-      flagBtn.addEventListener('click', async () => {
+      flagBtn.addEventListener('click', async (e) => {
+        e.stopPropagation()
+        e.preventDefault()
         if (!auth.currentUser) {
           if (confirm('You must sign in to report. Go to login page?')) {
             window.location.href = './auth.html'
@@ -1355,7 +1357,7 @@ function init() {
                     <div style="font-size:12px;margin-top:6px">${esc(item.timeSlot||'')} / ${esc(updates.category||'')}</div>`
                   // append flag button similar to renderSuggestions
                   const flagBtn = document.createElement('button'); flagBtn.textContent='Report'; flagBtn.style.marginTop='8px'
-                  flagBtn.addEventListener('click', async ()=>{ try { await flagSuggestion(item.id, 'Inappropriate content'); alert('Report submitted.') } catch(e){ alert('Failed to submit report.') }})
+                  flagBtn.addEventListener('click', async (e)=>{ e.stopPropagation(); e.preventDefault(); try { await flagSuggestion(item.id, 'Inappropriate content'); alert('Report submitted.') } catch(e){ alert('Failed to submit report.') }})
                   popup.appendChild(document.createElement('hr')); popup.appendChild(flagBtn)
                   m.unbindPopup()
                   m.bindPopup(popup)
