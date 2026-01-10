@@ -890,12 +890,8 @@ function init() {
     Object.values(markers).forEach(m => map.removeLayer(m))
     markers = {}
     list.forEach(s => {
-      const m = L.marker([s.lat, s.lng]).addTo(map)
-      
-      // Prevent map click when clicking on marker
-      m.on('click', (e) => {
-        L.DomEvent.stopPropagation(e)
-      })
+      // Create marker with bubblingMouseEvents: false to prevent click from bubbling to map
+      const m = L.marker([s.lat, s.lng], { bubblingMouseEvents: false }).addTo(map)
       
       const popup = document.createElement('div')
       popup.innerHTML = `<strong>${escapeHtml(s.title)}</strong><br/><em>${escapeHtml(s.city||'')}, ${escapeHtml(s.country||'')}</em>
@@ -906,7 +902,6 @@ function init() {
       flagBtn.addEventListener('click', async (e) => {
         e.stopPropagation()
         e.preventDefault()
-        L.DomEvent.stopPropagation(e)
         reportInProgress = true
         
         if (!auth.currentUser) {
